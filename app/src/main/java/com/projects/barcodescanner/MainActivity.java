@@ -1,30 +1,37 @@
 package com.projects.barcodescanner;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.widget.Button;
 import android.widget.Toast;
-import android.Manifest; // This import is correct for Manifest.permission.CAMERA
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import android.view.View; // This import is correct for View and View.OnClickListener
+
+import com.google.mlkit.vision.barcode.BarcodeScanner;
+import com.google.mlkit.vision.barcode.BarcodeScanning;
+import com.google.mlkit.vision.common.InputImage;
+
+import java.io.File;
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
     private ActivityResultLauncher<String> requestCameraPermissionLauncher;
-    private ActivityResultLauncher<Intent> takePictureLauncher;
+    private ActivityResultLauncher<Uri> takePictureLauncher;
+    private Uri imageUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
@@ -33,62 +40,96 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        // Setup permission launcher
         requestCameraPermissionLauncher =
                 registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                     if (isGranted) {
-                        openCamera();
+                        launchCamera(); // If permission granted, launch camera
                     } else {
-                        Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show();
-                    }
-                });
-        takePictureLauncher =
-                registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-                    if (result.getResultCode() == RESULT_OK) {
-                        // Handle the image capture (e.g., display it, save it)
-                        // Intent data = result.getData();
-                        // if (data != null && data.getExtras() != null) {
-                        //     Bitmap imageBitmap = (Bitmap) data.getExtras().get("data");
-                        //     // Use the bitmap
-                        // }
-                        Toast.makeText(this, "Photo taken!", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(this, "Photo capture cancelled", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Camera permission denied.", Toast.LENGTH_SHORT).show();
                     }
                 });
 
-        Button cameraButton = findViewById(R.id.cameraButton);
-        // CORRECTED OnClickListener:
-        cameraButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                checkCameraPermissionAndOpenCamera();
-            }
-        });
+        // Prepare a file and URI to receive the camera photo
+        imageUri = createImageUri();
+
+        // Setup launcher to take a picture and receive the result
+        takePictureLauncher = registerForActivityResult(
+                new ActivityResultContracts.TakePicture(),
+                isSuccess -> {
+                    if (isSuccess) {
+                        // Picture was taken successfully, now scan it for a barcode
+                        scanBarcodeFromUri(imageUri);
+                    } else {
+                        Toast.makeText(this, "Photo capture cancelled.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+        Button scanButton = findViewById(R.id.cameraButton);
+        scanButton.setText("Take Picture to Scan");
+        scanButton.setOnClickListener(v -> checkCameraPermissionAndLaunchCamera());
     }
 
-    private void checkCameraPermissionAndOpenCamera() {
+    private Uri createImageUri() {
+        File imagePath = new File(getFilesDir(), "images");
+        if (!imagePath.exists()) {
+            imagePath.mkdirs();
+        }
+        File imageFile = new File(imagePath, "barcode_image.jpg");
+        return FileProvider.getUriForFile(
+                this,
+                getApplicationContext().getPackageName() + ".provider", // Authority must match AndroidManifest
+                imageFile
+        );
+    }
+
+    private void checkCameraPermissionAndLaunchCamera() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
                 PackageManager.PERMISSION_GRANTED) {
-            // Permission is already granted
-            openCamera();
-        } else if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
-            // Explain to the user why you need the permission
-            // Then request the permission
-            Toast.makeText(this, "Camera permission is needed to take pictures", Toast.LENGTH_LONG).show();
-            requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA);
+            launchCamera();
         } else {
-            // Directly request the permission
             requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA);
         }
     }
 
-    private void openCamera() {
-        Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        // Ensure there's an activity that can handle the intent
-        if (cameraIntent.resolveActivity(getPackageManager()) != null) {
-            takePictureLauncher.launch(cameraIntent);
+    private void launchCamera() {
+        if (imageUri != null) {
+            takePictureLauncher.launch(imageUri);
         } else {
-            Toast.makeText(this, "No camera app found", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Could not prepare image file.", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void scanBarcodeFromUri(Uri imageUriToScan) {
+        try {
+            InputImage image = InputImage.fromFilePath(this, imageUriToScan);
+            BarcodeScanner scanner = BarcodeScanning.getClient();
+
+            scanner.process(image)
+                    .addOnSuccessListener(barcodes -> {
+                        if (barcodes.isEmpty()) {
+                            Toast.makeText(this, "No barcode found in the image.", Toast.LENGTH_LONG).show();
+                        } else {
+                            // Get the first barcode found
+                            String barcodeValue = barcodes.get(0).getRawValue();
+                            Toast.makeText(this, "Scan Successful!", Toast.LENGTH_SHORT).show();
+                            openBarcodeResultPage(barcodeValue);
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(this, "Barcode scanning failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    });
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Failed to load image for scanning.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void openBarcodeResultPage(String barcode) {
+        Intent intent = new Intent(this, BarcodeResultActivity.class);
+        intent.putExtra(BarcodeResultActivity.EXTRA_BARCODE_RESULT, barcode);
+        startActivity(intent);
     }
 }
