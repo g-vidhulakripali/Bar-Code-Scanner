@@ -1,9 +1,12 @@
+// Your updated MainActivity.java
 package com.projects.barcodescanner;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
@@ -14,6 +17,8 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 public class MainActivity extends AppCompatActivity {
+
+    private SharedPreferences sharedPreferences;
 
     // Launcher for the camera scanner activity
     private final ActivityResultLauncher<Intent> cameraScannerLauncher = registerForActivityResult(
@@ -40,12 +45,35 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
+        sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+
         Button scanButton = findViewById(R.id.scanButton);
+        Button logoutButton = findViewById(R.id.logoutButton);
+        TextView welcomeTextView = findViewById(R.id.welcomeTextView);
+
+        // Display welcome message
+        String username = sharedPreferences.getString("username", "User");
+        welcomeTextView.setText("Welcome, " + username + "!");
+
         scanButton.setOnClickListener(v -> {
             // Launch the camera scanner activity
             Intent intent = new Intent(MainActivity.this, CameraScannerActivity.class);
             cameraScannerLauncher.launch(intent);
         });
+
+        logoutButton.setOnClickListener(v -> logout());
+    }
+
+    private void logout() {
+        // Clear shared preferences
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.clear();
+        editor.apply();
+
+        // Navigate back to LoginActivity
+        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+        startActivity(intent);
+        finish(); // Prevent going back to the main activity
     }
 
     private void openBarcodeResultPage(String barcode) {

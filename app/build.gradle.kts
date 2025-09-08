@@ -29,6 +29,9 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    buildFeatures {
+        viewBinding = true // Added for View Binding
+    }
 }
 
 dependencies {
@@ -48,4 +51,11 @@ dependencies {
     implementation("androidx.camera:camera-camera2:${camerax_version}")
     implementation("androidx.camera:camera-lifecycle:${camerax_version}")
     implementation("androidx.camera:camera-view:${camerax_version}")
+    implementation("com.google.android.material:material:1.12.0")
+
+    // Room for Database
+    val roomVersion = "2.6.1" // Use 'val' for Kotlin variables
+    implementation("androidx.room:room-runtime:$roomVersion")
+    annotationProcessor("androidx.room:room-compiler:$roomVersion")
+    implementation("org.mindrot:jbcrypt:0.4")
 }
