@@ -2,15 +2,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Permissions and Features -->
     <uses-feature
         android:name="android.hardware.camera"
-        android:required="true" />
-
+        android:required="false" />
+    <!-- Set to false if camera is optional, true if it's strictly required -->
     <uses-permission android:name="android.permission.CAMERA" />
 
+    <!-- For targeting Android 11 (API 30) and above, if you're using intents
+         to call other camera apps, you might need to declare specific package visibility.
+         The <queries> block is for that. If you're using CameraX or handling the
+         camera entirely within your app, this might be less critical. -->
     <queries>
-
-        <!-- Declare your app's intent to use a camera app -->
+        <!-- Declare your app's intent to use an external camera app -->
         <intent>
             <action android:name="android.media.action.IMAGE_CAPTURE" />
         </intent>
@@ -26,35 +30,53 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BarCodeScanner"
         tools:targetApi="31">
-        <activity
-            android:name=".BarcodeResultActivity"
-            android:exported="false" />
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+        <!-- Ensure Theme.BarCodeScanner is defined in your themes.xml -->
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity android:name=".CameraScannerActivity"
-            android:screenOrientation="portrait"
-            tools:ignore="LockedOrientationActivity"/>
-        <!-- LoginActivity is now the starting point -->
+        <!-- LoginActivity is NOW the starting point of the application -->
         <activity
             android:name=".LoginActivity"
-            android:exported="true">
+            android:exported="true">  <!-- Must be true for LAUNCHER activity -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- RegisterActivity needs to be declared -->
+        <!-- MainActivity is no longer the launcher -->
+        <!-- It will be launched internally, likely after a successful login -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+        <!-- Set to false as it's launched from within the app -->
+
         <activity
             android:name=".RegisterActivity"
             android:exported="false" />
+        <!-- Launched from LoginActivity, so exported="false" -->
+
+        <activity
+            android:name=".BarcodeResultActivity"
+            android:exported="false" />
+        <!-- Launched from MainActivity/CameraScannerActivity, so exported="false" -->
+
+        <activity
+            android:name=".CameraScannerActivity"
+            android:screenOrientation="portrait"
+            android:exported="false"
+            tools:ignore="LockedOrientationActivity"/>
+        <!-- Launched from MainActivity, so exported="false" -->
+        <!-- Add exported="false" if not already present and it's internal -->
+
+        <!-- If using ZXing's CaptureActivity (from zxing-android-embedded library) -->
+        <!-- You would need to declare it if your CameraScannerActivity doesn't handle everything -->
+        <!-- Example:
+        <activity
+            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+            android:screenOrientation="fullSensor"
+            tools:replace="screenOrientation" />
+        -->
+
+        <!-- FileProvider for sharing files, e.g., images captured by camera -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"
@@ -63,7 +85,9 @@
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
+            <!-- Ensure you have res/xml/file_paths.xml defined -->
         </provider>
+
     </application>
 
 </manifest>

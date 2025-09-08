@@ -1,4 +1,3 @@
-// Create new Activity: com.projects.barcodescanner.RegisterActivity
 package com.projects.barcodescanner;
 
 import android.os.Bundle;
@@ -19,6 +18,11 @@ public class RegisterActivity extends AppCompatActivity {
     private ActivityRegisterBinding binding;
     private UserDao userDao;
 
+    // Define the prefix for admin users as a constant
+    private static final String ADMIN_PREFIX = "SM_admin_";
+    private static final String ROLE_ADMIN = "admin";
+    private static final String ROLE_USER = "user";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,11 +38,20 @@ public class RegisterActivity extends AppCompatActivity {
     private void registerUser() {
         String username = binding.usernameEditText.getText().toString().trim();
         String password = binding.passwordEditText.getText().toString().trim();
-        String role = binding.roleEditText.getText().toString().trim();
 
-        if (TextUtils.isEmpty(username) || TextUtils.isEmpty(password) || TextUtils.isEmpty(role)) {
-            Toast.makeText(this, "All fields are required", Toast.LENGTH_SHORT).show();
+        // MODIFIED: No longer reading role from an EditText
+
+        if (TextUtils.isEmpty(username) || TextUtils.isEmpty(password)) {
+            Toast.makeText(this, "Username and password are required", Toast.LENGTH_SHORT).show();
             return;
+        }
+
+        // NEW LOGIC: Determine the user role based on the username
+        String role;
+        if (username.startsWith(ADMIN_PREFIX)) {
+            role = ROLE_ADMIN;
+        } else {
+            role = ROLE_USER;
         }
 
         // Run database operations on a background thread
@@ -55,7 +68,7 @@ public class RegisterActivity extends AppCompatActivity {
             User user = new User();
             user.username = username;
             user.passwordHash = hashedPassword;
-            user.role = role;
+            user.role = role; // Assign the automatically determined role
 
             userDao.insert(user);
 
