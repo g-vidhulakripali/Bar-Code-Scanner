@@ -8,6 +8,7 @@
         android:required="false" />
     <!-- Set to false if camera is optional, true if it's strictly required -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <!-- For targeting Android 11 (API 30) and above, if you're using intents
          to call other camera apps, you might need to declare specific package visibility.

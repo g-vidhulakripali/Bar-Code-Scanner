@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId = "com.projects.barcodescanner"
-        minSdk = 36
+        minSdk = 24
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -53,9 +53,12 @@ dependencies {
     implementation("androidx.camera:camera-view:${camerax_version}")
     implementation("com.google.android.material:material:1.12.0")
 
-    // Room for Database
-    val roomVersion = "2.6.1" // Use 'val' for Kotlin variables
-    implementation("androidx.room:room-runtime:$roomVersion")
-    annotationProcessor("androidx.room:room-compiler:$roomVersion")
+//    // Room for Database
+//    val roomVersion = "2.6.1" // Use 'val' for Kotlin variables
+//    implementation("androidx.room:room-runtime:$roomVersion")
+//    annotationProcessor("androidx.room:room-compiler:$roomVersion")
     implementation("org.mindrot:jbcrypt:0.4")
+
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("org.json:json:20230227")
 }
