@@ -39,16 +39,27 @@ public class LoginActivity extends AppCompatActivity {
         AppDatabase db = AppDatabase.getDatabase(getApplicationContext());
         userDao = db.userDao();
 
-        binding.loginButton.setOnClickListener(v -> loginUser());
-        binding.registerButton.setOnClickListener(v -> {
+        // **CORRECTED ID**: Changed from loginButton to btnLogin
+        binding.btnLogin.setOnClickListener(v -> loginUser());
+
+        // **CORRECTED ID and VIEW TYPE**: Changed from registerButton to tvRegister (TextView)
+        binding.tvRegister.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
             startActivity(intent);
+        });
+
+        // (Optional) Add listener for Forgot Password
+        binding.tvForgotPassword.setOnClickListener(v -> {
+            Toast.makeText(this, "Forgot Password clicked", Toast.LENGTH_SHORT).show();
+            // Implement forgot password logic here
         });
     }
 
     private void loginUser() {
-        String username = binding.usernameEditText.getText().toString().trim();
-        String password = binding.passwordEditText.getText().toString().trim();
+        // **CORRECTED ID**: Changed from usernameEditText to etUsername
+        String username = binding.etUsername.getText().toString().trim();
+        // **CORRECTED ID**: Changed from passwordEditText to etPassword
+        String password = binding.etPassword.getText().toString().trim();
 
         if (TextUtils.isEmpty(username) || TextUtils.isEmpty(password)) {
             Toast.makeText(this, "Username and password are required", Toast.LENGTH_SHORT).show();

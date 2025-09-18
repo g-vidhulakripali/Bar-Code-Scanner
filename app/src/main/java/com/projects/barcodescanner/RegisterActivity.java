@@ -32,14 +32,21 @@ public class RegisterActivity extends AppCompatActivity {
         AppDatabase db = AppDatabase.getDatabase(getApplicationContext());
         userDao = db.userDao();
 
-        binding.registerButton.setOnClickListener(v -> registerUser());
+        // **CORRECTED ID**: Changed from registerButton to btnRegister
+        binding.btnRegister.setOnClickListener(v -> registerUser());
+
+        // **NEW**: Added a listener for the "Login Now" text to go back
+        binding.tvLoginNow.setOnClickListener(v -> {
+            // Finish the current activity to return to the previous one (LoginActivity)
+            finish();
+        });
     }
 
     private void registerUser() {
-        String username = binding.usernameEditText.getText().toString().trim();
-        String password = binding.passwordEditText.getText().toString().trim();
-
-        // MODIFIED: No longer reading role from an EditText
+        // **CORRECTED ID**: Changed from usernameEditText to etUsername
+        String username = binding.etUsername.getText().toString().trim();
+        // **CORRECTED ID**: Changed from passwordEditText to etPassword
+        String password = binding.etPassword.getText().toString().trim();
 
         if (TextUtils.isEmpty(username) || TextUtils.isEmpty(password)) {
             Toast.makeText(this, "Username and password are required", Toast.LENGTH_SHORT).show();
