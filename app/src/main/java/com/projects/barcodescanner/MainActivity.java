@@ -1,7 +1,5 @@
-// Your updated MainActivity.java
 package com.projects.barcodescanner;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -9,8 +7,6 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -20,19 +16,9 @@ public class MainActivity extends AppCompatActivity {
 
     private SharedPreferences sharedPreferences;
 
-    // Launcher for the camera scanner activity
-    private final ActivityResultLauncher<Intent> cameraScannerLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                    // Get the scanned barcode from the result
-                    String barcode = result.getData().getStringExtra(CameraScannerActivity.EXTRA_SCANNED_BARCODE);
-                    if (barcode != null) {
-                        // Launch the result activity
-                        openBarcodeResultPage(barcode);
-                    }
-                }
-            });
+    // The ActivityResultLauncher is no longer needed because CameraScannerActivity
+    // now handles its own UI (the popup) and doesn't return a result.
+    // private final ActivityResultLauncher<Intent> cameraScannerLauncher = ...
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,14 +37,15 @@ public class MainActivity extends AppCompatActivity {
         Button logoutButton = findViewById(R.id.logoutButton);
         TextView welcomeTextView = findViewById(R.id.welcomeTextView);
 
-        // Display welcome message
+        // Display welcome message (this remains the same)
         String username = sharedPreferences.getString("username", "User");
         welcomeTextView.setText("Welcome, " + username + "!");
 
         scanButton.setOnClickListener(v -> {
-            // Launch the camera scanner activity
+            // SIMPLIFIED: Simply launch the camera scanner activity.
+            // We no longer need to wait for a result.
             Intent intent = new Intent(MainActivity.this, CameraScannerActivity.class);
-            cameraScannerLauncher.launch(intent);
+            startActivity(intent);
         });
 
         logoutButton.setOnClickListener(v -> logout());
@@ -76,9 +63,7 @@ public class MainActivity extends AppCompatActivity {
         finish(); // Prevent going back to the main activity
     }
 
-    private void openBarcodeResultPage(String barcode) {
-        Intent intent = new Intent(this, BarcodeResultActivity.class);
-        intent.putExtra(BarcodeResultActivity.EXTRA_BARCODE_RESULT, barcode);
-        startActivity(intent);
-    }
+    // The method to open the result page is no longer needed, as the popup
+    // is now part of CameraScannerActivity's flow.
+    // private void openBarcodeResultPage(String barcode) { ... }
 }

@@ -10,4 +10,11 @@
 
     <!-- Add this line if it's missing -->
     <color name="button_yellow">#F4C542</color>
+    <!-- Colors from your Login Screen -->
+    <color name="text_primary_dark">#333333</color>
+    <color name="text_secondary_light">#555555</color>
+
+    <!-- Gradient Colors for the Button -->
+    <color name="yellow_gradient_start">#FFD60A</color>
+    <color name="yellow_gradient_end">#FFC107</color>
 </resources>

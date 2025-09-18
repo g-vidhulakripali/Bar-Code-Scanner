@@ -2,16 +2,16 @@ package com.projects.barcodescanner;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.core.Camera;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageProxy;
@@ -20,6 +20,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.vision.barcode.BarcodeScanner;
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions;
@@ -30,14 +31,20 @@ import com.google.mlkit.vision.common.InputImage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class CameraScannerActivity extends AppCompatActivity {
-
-    public static final String EXTRA_SCANNED_BARCODE = "com.projects.barcodescanner.SCANNED_BARCODE";
+public class CameraScannerActivity extends AppCompatActivity implements ProductNotFoundBottomSheet.OnScanCompletionListener {
 
     private ExecutorService cameraExecutor;
     private PreviewView cameraPreviewView;
     private BarcodeScanner scanner;
+    private ProcessCameraProvider cameraProvider;
+    private Camera camera;
+
+    // --- CHANGE 1: Variable type is now MaterialButton ---
+    private MaterialButton torchButton;
+    private boolean isTorchOn = false;
+    private final AtomicBoolean isProcessing = new AtomicBoolean(false);
 
     private final ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
@@ -45,7 +52,7 @@ public class CameraScannerActivity extends AppCompatActivity {
                     startCamera();
                 } else {
                     Toast.makeText(this, "Camera permission is required to scan barcodes.", Toast.LENGTH_SHORT).show();
-                    finish(); // Close the activity if permission is denied
+                    finish();
                 }
             });
 
@@ -55,8 +62,13 @@ public class CameraScannerActivity extends AppCompatActivity {
         setContentView(R.layout.activity_camera_scanner);
 
         cameraPreviewView = findViewById(R.id.cameraPreviewView);
-        cameraExecutor = Executors.newSingleThreadExecutor();
+        torchButton = findViewById(R.id.torchButton);
+        MaterialButton closeButton = findViewById(R.id.closeButton);
 
+        closeButton.setOnClickListener(v -> finish());
+        torchButton.setOnClickListener(v -> toggleTorch());
+
+        cameraExecutor = Executors.newSingleThreadExecutor();
         checkCameraPermission();
     }
 
@@ -72,7 +84,7 @@ public class CameraScannerActivity extends AppCompatActivity {
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
         cameraProviderFuture.addListener(() -> {
             try {
-                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+                cameraProvider = cameraProviderFuture.get();
                 bindCameraUseCases(cameraProvider);
             } catch (ExecutionException | InterruptedException e) {
                 Toast.makeText(this, "Error starting camera: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -101,7 +113,13 @@ public class CameraScannerActivity extends AppCompatActivity {
 
         try {
             cameraProvider.unbindAll();
-            cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis);
+            camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis);
+            if (camera.getCameraInfo().hasFlashUnit()) {
+                torchButton.setVisibility(View.VISIBLE);
+                updateTorchIcon(); // Set the initial correct icon
+            } else {
+                torchButton.setVisibility(View.GONE);
+            }
         } catch (Exception e) {
             Log.e("CameraScannerActivity", "Use case binding failed", e);
         }
@@ -114,6 +132,12 @@ public class CameraScannerActivity extends AppCompatActivity {
             return;
         }
 
+        if (isProcessing.get()) {
+            imageProxy.close();
+            return;
+        }
+        isProcessing.set(true);
+
         InputImage inputImage = InputImage.fromMediaImage(
                 imageProxy.getImage(),
                 imageProxy.getImageInfo().getRotationDegrees()
@@ -122,29 +146,55 @@ public class CameraScannerActivity extends AppCompatActivity {
         scanner.process(inputImage)
                 .addOnSuccessListener(barcodes -> {
                     if (!barcodes.isEmpty()) {
-                        // Stop the camera and analyzer to prevent further scanning
-                        try {
-                            ProcessCameraProvider.getInstance(this).get().unbindAll();
-                        } catch (ExecutionException | InterruptedException e) {
-                            Log.e("CameraScannerActivity", "Failed to unbind camera", e);
-                        }
-
+                        ContextCompat.getMainExecutor(this).execute(() -> {
+                            if (cameraProvider != null) {
+                                cameraProvider.unbindAll();
+                            }
+                            resetTorchUI();
+                        });
                         String barcodeValue = barcodes.get(0).getRawValue();
-                        Log.d("BarcodeScanner", "Barcode detected: " + barcodeValue);
-
-                        // Return the result to the calling activity on the main thread
-                        runOnUiThread(() -> returnBarcodeResult(barcodeValue));
+                        ContextCompat.getMainExecutor(this).execute(() -> showProductNotFoundPopup(barcodeValue));
+                    } else {
+                        isProcessing.set(false);
                     }
                 })
-                .addOnFailureListener(e -> Log.e("BarcodeScanner", "Barcode scanning failed", e))
+                .addOnFailureListener(e -> isProcessing.set(false))
                 .addOnCompleteListener(task -> imageProxy.close());
     }
 
-    private void returnBarcodeResult(String barcode) {
-        Intent resultIntent = new Intent();
-        resultIntent.putExtra(EXTRA_SCANNED_BARCODE, barcode);
-        setResult(Activity.RESULT_OK, resultIntent);
-        finish(); // Close this activity and return to MainActivity
+    private void showProductNotFoundPopup(String barcode) {
+        ProductNotFoundBottomSheet bottomSheet = ProductNotFoundBottomSheet.newInstance(barcode);
+        bottomSheet.setOnScanCompletionListener(this);
+        bottomSheet.setCancelable(true);
+        bottomSheet.show(getSupportFragmentManager(), "ProductNotFoundBottomSheetTag");
+    }
+
+    @Override
+    public void onScanCompleted() {
+        isProcessing.set(false);
+        startCamera();
+    }
+
+    private void toggleTorch() {
+        if (camera == null || !camera.getCameraInfo().hasFlashUnit()) return;
+        isTorchOn = !isTorchOn;
+        camera.getCameraControl().enableTorch(isTorchOn);
+        updateTorchIcon();
+    }
+
+    private void resetTorchUI() {
+        if (isTorchOn) {
+            isTorchOn = false;
+            updateTorchIcon();
+        }
+    }
+
+    private void updateTorchIcon() {
+        if (isTorchOn) {
+            torchButton.setIconResource(R.drawable.ic_flashlight_on);
+        } else {
+            torchButton.setIconResource(R.drawable.ic_flashlight_off);
+        }
     }
 
     @Override

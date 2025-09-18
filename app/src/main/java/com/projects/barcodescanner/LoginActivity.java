@@ -37,9 +37,9 @@ public class LoginActivity extends AppCompatActivity {
             Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
             startActivity(intent);
         });
-        binding.tvForgotPassword.setOnClickListener(v ->
-                Toast.makeText(this, "Forgot Password clicked", Toast.LENGTH_SHORT).show()
-        );
+//        binding.tvForgotPassword.setOnClickListener(v ->
+//                Toast.makeText(this, "Forgot Password clicked", Toast.LENGTH_SHORT).show()
+//        );
     }
 
     private void loginUser() {
