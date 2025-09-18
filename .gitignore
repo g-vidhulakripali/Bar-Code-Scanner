@@ -13,4 +13,4 @@
 .externalNativeBuild
 .cxx
 local.properties
-[app/src/main/java/com/example/barcode/Constants.java]
+[app/src/main/java/com/projects/barcodescanner/constants/Constants.java]
