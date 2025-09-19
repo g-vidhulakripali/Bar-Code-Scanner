@@ -1,21 +1,21 @@
 package com.projects.barcodescanner;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 public class ProductNotFoundBottomSheet extends BottomSheetDialogFragment {
 
-    // 1. Define the listener interface
     public interface OnScanCompletionListener {
         void onScanCompleted();
     }
@@ -31,7 +31,6 @@ public class ProductNotFoundBottomSheet extends BottomSheetDialogFragment {
         return fragment;
     }
 
-    // 2. Add a method to set the listener
     public void setOnScanCompletionListener(OnScanCompletionListener listener) {
         this.completionListener = listener;
     }
@@ -53,12 +52,14 @@ public class ProductNotFoundBottomSheet extends BottomSheetDialogFragment {
         barcodeTextView.setText("Barcode: " + barcode);
 
         uploadButton.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "Upload feature coming soon!", Toast.LENGTH_SHORT).show();
-            dismiss();
+            // Launch the AddProductActivity
+            Intent intent = new Intent(getContext(), AddProductActivity.class);
+            intent.putExtra("PRODUCT_BARCODE", barcode);
+            startActivity(intent);
+            dismiss(); // Close the bottom sheet
         });
     }
 
-    // 3. Override onDismiss to trigger the callback
     @Override
     public void onDismiss(@NonNull DialogInterface dialog) {
         super.onDismiss(dialog);

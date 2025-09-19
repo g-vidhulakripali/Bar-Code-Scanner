@@ -153,6 +153,7 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
                             resetTorchUI();
                         });
                         String barcodeValue = barcodes.get(0).getRawValue();
+                        Log.d("ScannerDebug", "Barcode Scanned: " + barcodeValue);
                         ContextCompat.getMainExecutor(this).execute(() -> showProductNotFoundPopup(barcodeValue));
                     } else {
                         isProcessing.set(false);
