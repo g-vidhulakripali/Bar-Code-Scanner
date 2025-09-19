@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView; // NEW: Import AdapterView
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -29,6 +30,7 @@ import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -43,6 +45,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Currency;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -60,11 +63,12 @@ public class AddProductActivity extends AppCompatActivity {
 
     // UI Components
     private EditText barcodeEditText, productNameEditText, descriptionEditText, categoryEditText,
-            priceEditText, ingredientsEditText, manufacturedInEditText, availableStoresEditText;
+            priceEditText, ingredientsEditText, manufacturedInEditText, availableStoresEditText, currencyEditText;
     private ImageView productImageView;
     private ProgressBar progressBar;
     private Spinner countrySpinner;
     private ImageButton searchButton;
+    private SwitchMaterial isEdibleSwitch;
 
     // Services & Clients
     private FusedLocationProviderClient fusedLocationClient;
@@ -124,6 +128,7 @@ public class AddProductActivity extends AppCompatActivity {
         descriptionEditText = findViewById(R.id.descriptionEditText);
         categoryEditText = findViewById(R.id.categoryEditText);
         priceEditText = findViewById(R.id.priceEditText);
+        currencyEditText = findViewById(R.id.currencyEditText);
         ingredientsEditText = findViewById(R.id.ingredientsEditText);
         manufacturedInEditText = findViewById(R.id.manufacturedInEditText);
         availableStoresEditText = findViewById(R.id.availableStoresEditText);
@@ -131,6 +136,7 @@ public class AddProductActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         countrySpinner = findViewById(R.id.countrySpinner);
         searchButton = findViewById(R.id.searchButton);
+        isEdibleSwitch = findViewById(R.id.isEdibleSwitch);
     }
 
     private void setupCountrySpinner() {
@@ -146,6 +152,21 @@ public class AddProductActivity extends AppCompatActivity {
         countryAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, countryNames);
         countryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         countrySpinner.setAdapter(countryAdapter);
+
+        // NEW: Set listener to update currency when a country is selected
+        countrySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedCountryName = (String) parent.getItemAtPosition(position);
+                String countryCode = countryNameToCodeMap.get(selectedCountryName);
+                updateCurrencyForCountry(countryCode);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                currencyEditText.setText(""); // Clear currency if nothing is selected
+            }
+        });
     }
 
     private void checkLocationPermission() {
@@ -177,7 +198,13 @@ public class AddProductActivity extends AppCompatActivity {
                         String countryName = addresses.get(0).getCountryName();
                         int position = countryAdapter.getPosition(countryName);
                         if (position >= 0) {
+                            // Setting the selection will trigger the OnItemSelectedListener,
+                            // which will then update the currency automatically.
                             countrySpinner.setSelection(position);
+                        } else {
+                            // MODIFIED: Fallback to update currency directly if country not in list
+                            String countryCode = addresses.get(0).getCountryCode();
+                            updateCurrencyForCountry(countryCode);
                         }
                     }
                 } catch (IOException e) {
@@ -186,6 +213,28 @@ public class AddProductActivity extends AppCompatActivity {
             }
         });
     }
+
+    // NEW: Helper method to update the currency EditText based on a country code
+    private void updateCurrencyForCountry(String countryCode) {
+        if (countryCode == null || countryCode.isEmpty()) {
+            currencyEditText.setText("");
+            return;
+        }
+        try {
+            Locale locale = new Locale("", countryCode.toUpperCase());
+            Currency currency = Currency.getInstance(locale);
+            if (currency != null) {
+                String currencyText = currency.getCurrencyCode() + " (" + currency.getSymbol(locale) + ")";
+                currencyEditText.setText(currencyText);
+            } else {
+                currencyEditText.setText("N/A");
+            }
+        } catch (IllegalArgumentException e) {
+            Log.w(TAG, "Could not get currency for country code: " + countryCode, e);
+            currencyEditText.setText("N/A"); // Handle cases where currency might not be available
+        }
+    }
+
 
     private void onSearchClicked() {
         String productName = productNameEditText.getText().toString().trim();
@@ -241,6 +290,8 @@ public class AddProductActivity extends AppCompatActivity {
         String title = searchResult.has("title") ? searchResult.get("title").getAsString() : "";
 
         descriptionEditText.setText(snippet);
+        descriptionEditText.setMovementMethod(new android.text.method.ScrollingMovementMethod());
+        descriptionEditText.setVerticalScrollBarEnabled(true);
         manufacturedInEditText.setText((String) countrySpinner.getSelectedItem());
 
         if (snippet.toLowerCase().contains("category:")) {
@@ -259,6 +310,7 @@ public class AddProductActivity extends AppCompatActivity {
     }
 
     private String extractValueAfterKeyword(String text, String keyword) {
+        // This helper method is less reliable with Shopping API, but kept in case it's needed
         try {
             int keywordIndex = text.toLowerCase().indexOf(keyword);
             if (keywordIndex != -1) {
@@ -274,7 +326,7 @@ public class AddProductActivity extends AppCompatActivity {
     }
 
     private void saveProductFlow() {
-        if (productNameEditText.getText() == null || productNameEditText.getText().toString().trim().isEmpty()) {
+        if (productNameEditText.getText().toString().trim().isEmpty()) {
             Toast.makeText(this, "Product name is required.", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -328,6 +380,7 @@ public class AddProductActivity extends AppCompatActivity {
         productJson.addProperty("description", descriptionEditText.getText().toString());
         productJson.addProperty("category", categoryEditText.getText().toString());
         productJson.addProperty("manufactured_in", manufacturedInEditText.getText().toString());
+        productJson.addProperty("is_edible", isEdibleSwitch.isChecked());
 
         if (!priceEditText.getText().toString().isEmpty()) {
             try {

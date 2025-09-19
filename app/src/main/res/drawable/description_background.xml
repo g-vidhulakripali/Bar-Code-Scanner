@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <!-- A semi-transparent white similar to the glass effect but slightly more opaque -->
+    <solid android:color="#99FFFFFF" />
+    <!-- High corner radius for the bubble effect -->
+    <corners android:radius="30dp" />
+</shape>

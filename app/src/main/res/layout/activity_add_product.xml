@@ -63,18 +63,11 @@
                 <!-- Barcode -->
                 <EditText
                     android:id="@+id/barcodeEditText"
-                    android:layout_width="match_parent"
-                    android:layout_height="50dp"
-                    android:layout_marginBottom="12dp"
-                    android:background="@drawable/edittext_background"
-                    android:drawableStart="@drawable/ic_barcode_logo"
+                    style="@style/FormEditText"
+                    android:drawableStart="@drawable/ic_barcode_logo_black"
                     android:drawablePadding="12dp"
                     android:enabled="false"
-                    android:hint="Barcode"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:textColor="#505050"
-                    android:textColorHint="#9E9E9E" />
+                    android:hint="Barcode" />
 
                 <!-- Country Dropdown -->
                 <TextView
@@ -83,7 +76,7 @@
                     android:layout_marginStart="4dp"
                     android:text="Country"
                     android:textColor="@color/white"
-                    android:textSize="12sp"/>
+                    android:textSize="12sp" />
                 <Spinner
                     android:id="@+id/countrySpinner"
                     android:layout_width="match_parent"
@@ -97,17 +90,16 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
+                    android:layout_marginBottom="12dp"
+                    android:orientation="horizontal">
+
                     <EditText
                         android:id="@+id/productNameEditText"
+                        style="@style/FormEditText.NoMargin"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="50dp"
-                        android:background="@drawable/edittext_background"
-                        android:hint="Product Name"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp" />
+                        android:hint="Product Name" />
+
                     <ImageButton
                         android:id="@+id/searchButton"
                         android:layout_width="50dp"
@@ -118,14 +110,51 @@
                         app:tint="#F8C545" />
                 </LinearLayout>
 
-                <!-- New Fields -->
+                <!-- Other Fields -->
                 <EditText android:id="@+id/categoryEditText" style="@style/FormEditText" android:hint="Category" />
-                <EditText android:id="@+id/priceEditText" style="@style/FormEditText" android:hint="Price" android:inputType="numberDecimal"/>
+                <EditText
+                    android:id="@+id/currencyEditText"
+                    style="@style/FormEditText"
+                    android:hint="Currency"
+                    android:enabled="false"/>
+
+                <EditText android:id="@+id/priceEditText" style="@style/FormEditText" android:hint="Price" android:inputType="numberDecimal" />
                 <EditText android:id="@+id/ingredientsEditText" style="@style/FormEditText" android:hint="Ingredients (comma-separated)" />
                 <EditText android:id="@+id/manufacturedInEditText" style="@style/FormEditText" android:hint="Manufactured In" />
                 <EditText android:id="@+id/availableStoresEditText" style="@style/FormEditText" android:hint="Available Stores (comma-separated)" />
-                <EditText android:id="@+id/descriptionEditText" style="@style/FormEditText" android:hint="Description" android:minLines="3" android:gravity="top" android:paddingTop="12dp"/>
+
+                <!-- Description Field -->
+                <EditText
+                    android:id="@+id/descriptionEditText"
+                    style="@style/FormEditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="120dp"
+                    android:gravity="top|start"
+                    android:hint="Description"
+                    android:inputType="textMultiLine"
+                    android:scrollbars="vertical"
+                    android:scrollHorizontally="false"
+                    android:ellipsize="none"
+                    android:padding="12dp"
+                    android:background="@drawable/rounded_edittext"
+                    android:overScrollMode="always" />
+
+
+                <!-- THIS IS THE CHANGE -->
+
+                <!-- Is Edible Switch -->
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/isEdibleSwitch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:paddingStart="4dp"
+                    android:text="Is this product edible?"
+                    android:textColor="@color/white"
+                    android:textSize="16sp" />
+
             </LinearLayout>
+
 
             <!-- Buttons -->
             <androidx.appcompat.widget.AppCompatButton
