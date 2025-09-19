@@ -56,7 +56,7 @@
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:background="@drawable/button_background_gradient"
-        android:text="Upload Product Images"
+        android:text="Upload Product"
         android:textColor="@color/white"
         android:textSize="18sp"
         android:textStyle="bold" />
