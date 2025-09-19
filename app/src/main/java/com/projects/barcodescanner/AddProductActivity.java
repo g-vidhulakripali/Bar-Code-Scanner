@@ -14,6 +14,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -24,15 +25,12 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.material.textfield.TextInputEditText;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.projects.barcodescanner.constants.Constants;
 import com.projects.barcodescanner.db.SupabaseService;
@@ -61,7 +59,8 @@ public class AddProductActivity extends AppCompatActivity {
     private static final String TAG = "AddProductActivity";
 
     // UI Components
-    private TextInputEditText barcodeEditText, productNameEditText, descriptionEditText, otherDetailsEditText, priceEditText;
+    private EditText barcodeEditText, productNameEditText, descriptionEditText, categoryEditText,
+            priceEditText, ingredientsEditText, manufacturedInEditText, availableStoresEditText;
     private ImageView productImageView;
     private ProgressBar progressBar;
     private Spinner countrySpinner;
@@ -87,8 +86,8 @@ public class AddProductActivity extends AppCompatActivity {
                 InputStream inputStream = getContentResolver().openInputStream(selectedImageUri);
                 Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
                 productImageView.setImageBitmap(bitmap);
-                productImageView.setScaleType(ImageView.ScaleType.CENTER_CROP); // Adjust scale type after loading
-                productImageView.setPadding(0, 0, 0, 0); // Remove padding
+                productImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                productImageView.setPadding(0, 0, 0, 0);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
                 Toast.makeText(this, "Failed to load image", Toast.LENGTH_SHORT).show();
@@ -102,7 +101,6 @@ public class AddProductActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_product);
 
         initializeViews();
-        setupToolbar();
         setupCountrySpinner();
 
         httpClient = new OkHttpClient();
@@ -112,10 +110,8 @@ public class AddProductActivity extends AppCompatActivity {
         productBarcode = getIntent().getStringExtra("PRODUCT_BARCODE");
         barcodeEditText.setText(productBarcode);
 
-        // Set default country based on location
         checkLocationPermission();
 
-        // Set click listeners
         searchButton.setOnClickListener(v -> onSearchClicked());
         findViewById(R.id.imagePickerCard).setOnClickListener(v -> openImagePicker());
         findViewById(R.id.addProductButton).setOnClickListener(v -> saveProductFlow());
@@ -126,26 +122,18 @@ public class AddProductActivity extends AppCompatActivity {
         barcodeEditText = findViewById(R.id.barcodeEditText);
         productNameEditText = findViewById(R.id.productNameEditText);
         descriptionEditText = findViewById(R.id.descriptionEditText);
-        otherDetailsEditText = findViewById(R.id.otherDetailsEditText);
+        categoryEditText = findViewById(R.id.categoryEditText);
         priceEditText = findViewById(R.id.priceEditText);
+        ingredientsEditText = findViewById(R.id.ingredientsEditText);
+        manufacturedInEditText = findViewById(R.id.manufacturedInEditText);
+        availableStoresEditText = findViewById(R.id.availableStoresEditText);
         productImageView = findViewById(R.id.productImageView);
         progressBar = findViewById(R.id.progressBar);
         countrySpinner = findViewById(R.id.countrySpinner);
         searchButton = findViewById(R.id.searchButton);
     }
 
-    private void setupToolbar() {
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("Add New Product");
-        }
-        toolbar.setNavigationOnClickListener(v -> finish());
-    }
-
     private void setupCountrySpinner() {
-        // Populate map and list for spinner
         String[] isoCountryCodes = Locale.getISOCountries();
         List<String> countryNames = new ArrayList<>();
         for (String countryCode : isoCountryCodes) {
@@ -155,7 +143,6 @@ public class AddProductActivity extends AppCompatActivity {
             countryNames.add(countryName);
         }
         Collections.sort(countryNames);
-
         countryAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, countryNames);
         countryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         countrySpinner.setAdapter(countryAdapter);
@@ -179,7 +166,7 @@ public class AddProductActivity extends AppCompatActivity {
 
     private void setDefaultCountryFromLocation() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return; // Should not happen due to prior checks
+            return;
         }
         fusedLocationClient.getLastLocation().addOnSuccessListener(this, location -> {
             if (location != null) {
@@ -206,23 +193,18 @@ public class AddProductActivity extends AppCompatActivity {
             Toast.makeText(this, "Please enter a product name to search.", Toast.LENGTH_SHORT).show();
             return;
         }
-
         String selectedCountryName = (String) countrySpinner.getSelectedItem();
         String countryCode = countryNameToCodeMap.get(selectedCountryName);
-
         if (countryCode == null) {
             Toast.makeText(this, "Please select a valid country.", Toast.LENGTH_SHORT).show();
             return;
         }
-
         searchProductOnSerpApi(productName, countryCode);
     }
 
     private void searchProductOnSerpApi(String productName, String countryCode) {
         showLoading();
-        // Use standard Google search engine for better text matching
         String url = "https://serpapi.com/search.json?engine=google&q=" + productName + "&gl=" + countryCode + "&api_key=" + Constants.SERPAPI_KEY;
-
         Request request = new Request.Builder().url(url).build();
         httpClient.newCall(request).enqueue(new Callback() {
             @Override
@@ -237,15 +219,13 @@ public class AddProductActivity extends AppCompatActivity {
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (response.isSuccessful() && response.body() != null) {
                     JsonObject jsonObject = gson.fromJson(response.body().string(), JsonObject.class);
-                    // Standard Google search returns 'organic_results'
                     if (jsonObject.has("organic_results")) {
                         JsonArray results = jsonObject.getAsJsonArray("organic_results");
                         if (results.size() > 0) {
-                            // Take the first result
                             JsonObject firstResult = results.get(0).getAsJsonObject();
                             runOnUiThread(() -> populateUI(firstResult));
                         } else {
-                            runOnUiThread(() -> Toast.makeText(AddProductActivity.this, "No details found for this product.", Toast.LENGTH_SHORT).show());
+                            runOnUiThread(() -> Toast.makeText(AddProductActivity.this, "No details found.", Toast.LENGTH_SHORT).show());
                         }
                     }
                 } else {
@@ -257,28 +237,42 @@ public class AddProductActivity extends AppCompatActivity {
     }
 
     private void populateUI(JsonObject searchResult) {
-        // We already have the product name, so we don't need to set it again.
-        // Let's populate the description and other details.
-        if (searchResult.has("snippet")) {
-            descriptionEditText.setText(searchResult.get("snippet").getAsString());
+        String snippet = searchResult.has("snippet") ? searchResult.get("snippet").getAsString() : "";
+        String title = searchResult.has("title") ? searchResult.get("title").getAsString() : "";
+
+        descriptionEditText.setText(snippet);
+        manufacturedInEditText.setText((String) countrySpinner.getSelectedItem());
+
+        if (snippet.toLowerCase().contains("category:")) {
+            categoryEditText.setText(extractValueAfterKeyword(snippet, "category:"));
+        }
+        if (snippet.toLowerCase().contains("ingredients:")) {
+            ingredientsEditText.setText(extractValueAfterKeyword(snippet, "ingredients:"));
+        } else if (title.toLowerCase().contains("ingredients")) {
+            ingredientsEditText.setText("Found in title, please verify.");
+        }
+        if (snippet.toLowerCase().contains("available at")) {
+            availableStoresEditText.setText(extractValueAfterKeyword(snippet, "available at"));
         }
 
-        // Try to extract brand or other info from the title or link
-        if(searchResult.has("title")) {
-            String title = searchResult.get("title").getAsString();
-            // A simple heuristic to find a brand name
-            String[] commonBrands = {"Amazon", "Walmart", "Target", "Best Buy"};
-            for(String brand : commonBrands){
-                if(title.contains(brand)){
-                    otherDetailsEditText.setText(brand);
-                    break;
-                }
-            }
-        }
         Toast.makeText(this, "Fields auto-filled. Please review and edit.", Toast.LENGTH_LONG).show();
     }
 
-    // --- The rest of the file (saveProductFlow, uploadImage, saveProductData, etc.) remains the same ---
+    private String extractValueAfterKeyword(String text, String keyword) {
+        try {
+            int keywordIndex = text.toLowerCase().indexOf(keyword);
+            if (keywordIndex != -1) {
+                int startIndex = keywordIndex + keyword.length();
+                int endIndex = text.indexOf(".", startIndex);
+                if (endIndex == -1) endIndex = text.length();
+                return text.substring(startIndex, endIndex).trim();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error parsing snippet", e);
+        }
+        return "";
+    }
+
     private void saveProductFlow() {
         if (productNameEditText.getText() == null || productNameEditText.getText().toString().trim().isEmpty()) {
             Toast.makeText(this, "Product name is required.", Toast.LENGTH_SHORT).show();
@@ -332,15 +326,26 @@ public class AddProductActivity extends AppCompatActivity {
         productJson.addProperty("product_name", productNameEditText.getText().toString());
         productJson.addProperty("barcode", productBarcode);
         productJson.addProperty("description", descriptionEditText.getText().toString());
-        productJson.addProperty("brand", otherDetailsEditText.getText().toString());
-        if (priceEditText.getText() != null && !priceEditText.getText().toString().isEmpty()) {
-            productJson.addProperty("price", Double.parseDouble(priceEditText.getText().toString()));
+        productJson.addProperty("category", categoryEditText.getText().toString());
+        productJson.addProperty("manufactured_in", manufacturedInEditText.getText().toString());
+
+        if (!priceEditText.getText().toString().isEmpty()) {
+            try {
+                productJson.addProperty("price", Double.parseDouble(priceEditText.getText().toString()));
+            } catch (NumberFormatException e) {
+                Toast.makeText(this, "Invalid price format", Toast.LENGTH_SHORT).show();
+                hideLoading();
+                return;
+            }
         }
-        String selectedCountryName = (String) countrySpinner.getSelectedItem();
-        productJson.addProperty("manufactured_in", selectedCountryName);
+
+        productJson.add("ingredients", convertStringTojsonArray(ingredientsEditText.getText().toString()));
+        productJson.add("available_stores", convertStringTojsonArray(availableStoresEditText.getText().toString()));
+
         if (imageUrl != null) {
             productJson.addProperty("image_url", imageUrl);
         }
+
         SupabaseService.addProduct(productJson, new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
@@ -362,6 +367,19 @@ public class AddProductActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+
+    private JsonArray convertStringTojsonArray(String text) {
+        JsonArray jsonArray = new JsonArray();
+        if (text != null && !text.trim().isEmpty()) {
+            String[] items = text.split(",");
+            for (String item : items) {
+                if (!item.trim().isEmpty()) {
+                    jsonArray.add(item.trim());
+                }
+            }
+        }
+        return jsonArray;
     }
 
     private File createTempFileFromUri(Uri uri) throws IOException {
@@ -388,6 +406,11 @@ public class AddProductActivity extends AppCompatActivity {
         pickImageLauncher.launch(intent);
     }
 
-    private void showLoading() { progressBar.setVisibility(View.VISIBLE); }
-    private void hideLoading() { progressBar.setVisibility(View.GONE); }
+    private void showLoading() {
+        progressBar.setVisibility(View.VISIBLE);
+    }
+
+    private void hideLoading() {
+        progressBar.setVisibility(View.GONE);
+    }
 }
