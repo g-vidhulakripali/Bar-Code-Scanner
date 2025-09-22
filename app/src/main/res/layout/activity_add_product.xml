@@ -55,6 +55,7 @@
                         android:id="@+id/productImageView"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
+                        android:contentDescription="Product Image Picker"
                         android:padding="28dp"
                         android:scaleType="centerInside"
                         android:src="@drawable/no_product" />
@@ -107,21 +108,44 @@
                         android:layout_marginStart="8dp"
                         android:background="@drawable/edittext_background"
                         android:src="@drawable/ic_search"
-                        app:tint="#F8C545" />
+                        app:tint="#F8C545"
+                        android:contentDescription="Search for product details online" />
                 </LinearLayout>
 
                 <!-- Other Fields -->
+                <EditText android:id="@+id/brandEditText" style="@style/FormEditText" android:hint="Brand" />
                 <EditText android:id="@+id/categoryEditText" style="@style/FormEditText" android:hint="Category" />
-                <EditText
-                    android:id="@+id/currencyEditText"
-                    style="@style/FormEditText"
-                    android:hint="Currency"
-                    android:enabled="false"/>
 
-                <EditText android:id="@+id/priceEditText" style="@style/FormEditText" android:hint="Price" android:inputType="numberDecimal" />
-                <EditText android:id="@+id/ingredientsEditText" style="@style/FormEditText" android:hint="Ingredients (comma-separated)" />
+                <!-- Currency and Price -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <EditText
+                        android:id="@+id/currencyEditText"
+                        style="@style/FormEditText.NoMargin"
+                        android:layout_width="0dp"
+                        android:layout_weight="0.4"
+                        android:hint="Currency" />
+
+                    <EditText
+                        android:id="@+id/priceEditText"
+                        style="@style/FormEditText.NoMargin"
+                        android:layout_width="0dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="0.6"
+                        android:hint="Price"
+                        android:inputType="numberDecimal" />
+                </LinearLayout>
+
+
+                <EditText android:id="@+id/ingredientsEditText" style="@style/FormEditText" android:hint="Ingredients" />
+                <EditText android:id="@+id/healthBenefitsEditText" style="@style/FormEditText" android:hint="Health Benefits" />
+                <EditText android:id="@+id/specificationsEditText" style="@style/FormEditText" android:hint="Specifications" />
                 <EditText android:id="@+id/manufacturedInEditText" style="@style/FormEditText" android:hint="Manufactured In" />
-                <EditText android:id="@+id/availableStoresEditText" style="@style/FormEditText" android:hint="Available Stores (comma-separated)" />
+                <EditText android:id="@+id/availableStoresEditText" style="@style/FormEditText" android:hint="Available Stores" />
 
                 <!-- Description Field -->
                 <EditText
@@ -138,9 +162,6 @@
                     android:padding="12dp"
                     android:background="@drawable/rounded_edittext"
                     android:overScrollMode="always" />
-
-
-                <!-- THIS IS THE CHANGE -->
 
                 <!-- Is Edible Switch -->
                 <com.google.android.material.switchmaterial.SwitchMaterial
