@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.Camera;
 import androidx.camera.core.CameraSelector;
@@ -22,18 +23,27 @@ import androidx.core.content.ContextCompat;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.mlkit.vision.barcode.BarcodeScanner;
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions;
 import com.google.mlkit.vision.barcode.BarcodeScanning;
 import com.google.mlkit.vision.barcode.common.Barcode;
 import com.google.mlkit.vision.common.InputImage;
+import com.projects.barcodescanner.db.SupabaseService;
 
+import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class CameraScannerActivity extends AppCompatActivity implements ProductNotFoundBottomSheet.OnScanCompletionListener {
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
+
+public class CameraScannerActivity extends AppCompatActivity implements ProductNotFoundBottomSheet.OnScanCompletionListener, ProductFoundBottomSheet.OnScanCompletionListener {
 
     private ExecutorService cameraExecutor;
     private PreviewView cameraPreviewView;
@@ -41,7 +51,6 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
     private ProcessCameraProvider cameraProvider;
     private Camera camera;
 
-    // --- CHANGE 1: Variable type is now MaterialButton ---
     private MaterialButton torchButton;
     private boolean isTorchOn = false;
     private final AtomicBoolean isProcessing = new AtomicBoolean(false);
@@ -116,7 +125,7 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
             camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis);
             if (camera.getCameraInfo().hasFlashUnit()) {
                 torchButton.setVisibility(View.VISIBLE);
-                updateTorchIcon(); // Set the initial correct icon
+                updateTorchIcon();
             } else {
                 torchButton.setVisibility(View.GONE);
             }
@@ -154,7 +163,7 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
                         });
                         String barcodeValue = barcodes.get(0).getRawValue();
                         Log.d("ScannerDebug", "Barcode Scanned: " + barcodeValue);
-                        ContextCompat.getMainExecutor(this).execute(() -> showProductNotFoundPopup(barcodeValue));
+                        checkProductInDatabase(barcodeValue);
                     } else {
                         isProcessing.set(false);
                     }
@@ -163,17 +172,80 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
                 .addOnCompleteListener(task -> imageProxy.close());
     }
 
+    private void checkProductInDatabase(String barcode) {
+        SupabaseService.getProductByBarcode(barcode, new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.e("Supabase", "Failed to fetch product by barcode", e);
+                runOnUiThread(() -> showProductNotFoundPopup(barcode));
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    String responseBody = response.body().string();
+                    try {
+                        JsonArray jsonArray = JsonParser.parseString(responseBody).getAsJsonArray();
+
+                        if (jsonArray.size() > 0) {
+                            // --- PRODUCT FOUND ---
+                            JsonObject productObject = jsonArray.get(0).getAsJsonObject();
+
+                            String name = "Product Name";
+                            if (productObject.has("product_name") && !productObject.get("product_name").isJsonNull()) {
+                                name = productObject.get("product_name").getAsString();
+                            }
+                            String description = "No description available";
+                            if (productObject.has("description") && !productObject.get("description").isJsonNull()) {
+                                description = productObject.get("description").getAsString();
+                            }
+                            String imageUrl = null;
+                            if (productObject.has("image_url") && !productObject.get("image_url").isJsonNull()) {
+                                imageUrl = productObject.get("image_url").getAsString();
+                            }
+
+                            final String finalName = name;
+                            final String finalDescription = description;
+                            final String finalImageUrl = imageUrl;
+                            runOnUiThread(() -> showProductFoundPopup(barcode, finalName, finalDescription, finalImageUrl));
+
+                        } else {
+                            // --- PRODUCT NOT FOUND ---
+                            runOnUiThread(() -> showProductNotFoundPopup(barcode));
+                        }
+                    } catch (Exception e) {
+                        Log.e("Supabase", "Error parsing JSON response", e);
+                        runOnUiThread(() -> showProductNotFoundPopup(barcode));
+                    }
+                } else {
+                    Log.e("Supabase", "Unsuccessful response: " + response.code());
+                    runOnUiThread(() -> showProductNotFoundPopup(barcode));
+                }
+            }
+        });
+    }
+
     private void showProductNotFoundPopup(String barcode) {
         ProductNotFoundBottomSheet bottomSheet = ProductNotFoundBottomSheet.newInstance(barcode);
         bottomSheet.setOnScanCompletionListener(this);
-        bottomSheet.setCancelable(true);
+        bottomSheet.setCancelable(true); // Prevent dismissing by clicking outside
         bottomSheet.show(getSupportFragmentManager(), "ProductNotFoundBottomSheetTag");
+    }
+
+    private void showProductFoundPopup(String barcode, String name, String description, String imageUrl) {
+        ProductFoundBottomSheet bottomSheet = ProductFoundBottomSheet.newInstance(barcode, name, description, imageUrl);
+        bottomSheet.setOnScanCompletionListener(this);
+        bottomSheet.setCancelable(true); // Prevent dismissing by clicking outside
+        bottomSheet.show(getSupportFragmentManager(), "ProductFoundBottomSheetTag");
     }
 
     @Override
     public void onScanCompleted() {
         isProcessing.set(false);
-        startCamera();
+        // Resume scanning only if permission is still granted
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            startCamera();
+        }
     }
 
     private void toggleTorch() {

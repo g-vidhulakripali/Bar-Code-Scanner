@@ -65,6 +65,8 @@ dependencies {
     // For Location Services
     implementation("com.google.android.gms:play-services-location:21.0.1")
 
+    implementation("com.squareup.picasso:picasso:2.8")
+
     // UI Components
     implementation("com.google.android.material:material:1.8.0")
     implementation("androidx.recyclerview:recyclerview:1.3.0")

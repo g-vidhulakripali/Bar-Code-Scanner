@@ -2,11 +2,13 @@ package com.projects.barcodescanner.db;
 
 import android.content.ContentResolver;
 import android.net.Uri;
+import android.util.Log;
 
 import com.projects.barcodescanner.constants.Constants;
 import com.google.gson.JsonObject;
 
 import java.io.File;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -16,7 +18,14 @@ import okhttp3.RequestBody;
 
 public class SupabaseService {
 
-    private static final OkHttpClient client = new OkHttpClient();
+    // --- CHANGE: Create a custom client with a longer timeout ---
+    private static final OkHttpClient client = new OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS) // Time to establish a connection
+            .readTimeout(30, TimeUnit.SECONDS)    // Time to wait for data to be read
+            .writeTimeout(30, TimeUnit.SECONDS)   // Time to wait for data to be written
+            .build();
+    // --- END CHANGE ---
+
     private static final String PRODUCTS_ENDPOINT = Constants.SUPABASE_URL + "/rest/v1/products";
 
     /**
