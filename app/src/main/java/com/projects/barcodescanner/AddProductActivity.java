@@ -34,6 +34,7 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import com.projects.barcodescanner.constants.Constants;
 import com.projects.barcodescanner.db.SupabaseService;
 
@@ -50,11 +51,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class AddProductActivity extends AppCompatActivity {
@@ -64,7 +68,7 @@ public class AddProductActivity extends AppCompatActivity {
     // UI Components
     private EditText barcodeEditText, productNameEditText, descriptionEditText, categoryEditText,
             priceEditText, ingredientsEditText, manufacturedInEditText, availableStoresEditText,
-            currencyEditText, brandEditText, specificationsEditText, healthBenefitsEditText; // NEW: Added EditTexts
+            currencyEditText, brandEditText, specificationsEditText, healthBenefitsEditText;
     private ImageView productImageView;
     private ProgressBar progressBar;
     private Spinner countrySpinner;
@@ -81,6 +85,7 @@ public class AddProductActivity extends AppCompatActivity {
     private String productBarcode;
     private ArrayAdapter<String> countryAdapter;
     private final Map<String, String> countryNameToCodeMap = new HashMap<>();
+    private final Map<String, String> countryCodeToNameMap = new HashMap<>(); // NEW: Reverse map for reliable lookup
 
     // Activity Result Launchers
     private final ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), this::onLocationPermissionResult);
@@ -108,7 +113,13 @@ public class AddProductActivity extends AppCompatActivity {
         initializeViews();
         setupCountrySpinner();
 
-        httpClient = new OkHttpClient();
+        httpClient = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)   // longer connection timeout
+                .readTimeout(60, TimeUnit.SECONDS)     // allow slow API responses
+                .writeTimeout(60, TimeUnit.SECONDS)    // allow time to upload data
+                .callTimeout(90, TimeUnit.SECONDS)     // total time for the call
+                .build();
+
         gson = new Gson();
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
@@ -138,8 +149,6 @@ public class AddProductActivity extends AppCompatActivity {
         countrySpinner = findViewById(R.id.countrySpinner);
         searchButton = findViewById(R.id.searchButton);
         isEdibleSwitch = findViewById(R.id.isEdibleSwitch);
-
-        // NEW: Initialize the new views
         brandEditText = findViewById(R.id.brandEditText);
         specificationsEditText = findViewById(R.id.specificationsEditText);
         healthBenefitsEditText = findViewById(R.id.healthBenefitsEditText);
@@ -152,6 +161,7 @@ public class AddProductActivity extends AppCompatActivity {
             Locale locale = new Locale("", countryCode);
             String countryName = locale.getDisplayCountry();
             countryNameToCodeMap.put(countryName, countryCode.toLowerCase());
+            countryCodeToNameMap.put(countryCode.toUpperCase(), countryName); // NEW: Populate the reverse map
             countryNames.add(countryName);
         }
         Collections.sort(countryNames);
@@ -190,6 +200,7 @@ public class AddProductActivity extends AppCompatActivity {
         }
     }
 
+    // MODIFIED: This method is now much more reliable.
     private void setDefaultCountryFromLocation() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
@@ -200,13 +211,17 @@ public class AddProductActivity extends AppCompatActivity {
                     Geocoder geocoder = new Geocoder(this, Locale.getDefault());
                     List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
                     if (addresses != null && !addresses.isEmpty()) {
-                        String countryName = addresses.get(0).getCountryName();
-                        int position = countryAdapter.getPosition(countryName);
-                        if (position >= 0) {
-                            countrySpinner.setSelection(position);
-                        } else {
-                            String countryCode = addresses.get(0).getCountryCode();
-                            updateCurrencyForCountry(countryCode);
+                        String countryCode = addresses.get(0).getCountryCode(); // e.g., "US", "IN"
+                        if (countryCode != null) {
+                            // Use the reliable code to find the exact display name from our map
+                            String countryName = countryCodeToNameMap.get(countryCode.toUpperCase());
+                            if (countryName != null) {
+                                int position = countryAdapter.getPosition(countryName);
+                                if (position >= 0) {
+                                    countrySpinner.setSelection(position);
+                                    // The onItemSelected listener will automatically update the currency.
+                                }
+                            }
                         }
                     }
                 } catch (IOException e) {
@@ -215,6 +230,7 @@ public class AddProductActivity extends AppCompatActivity {
             }
         });
     }
+
 
     private void updateCurrencyForCountry(String countryCode) {
         if (countryCode == null || countryCode.isEmpty()) {
@@ -236,6 +252,7 @@ public class AddProductActivity extends AppCompatActivity {
         }
     }
 
+    // ... The rest of your code remains unchanged ...
 
     private void onSearchClicked() {
         String productName = productNameEditText.getText().toString().trim();
@@ -244,14 +261,143 @@ public class AddProductActivity extends AppCompatActivity {
             return;
         }
         String selectedCountryName = (String) countrySpinner.getSelectedItem();
-        String countryCode = countryNameToCodeMap.get(selectedCountryName);
-        if (countryCode == null) {
+        String countryCode = countryNameToCodeMap.get(selectedCountryName); // Needed for backup
+        if (countryCode == null || selectedCountryName == null) {
             Toast.makeText(this, "Please select a valid country.", Toast.LENGTH_SHORT).show();
             return;
         }
-        searchProductOnSerpApi(productName, countryCode);
+        // Use the new primary API, with SerpAPI as a fallback
+        searchProductOnCustomApi(productName, selectedCountryName, countryCode);
     }
 
+    private void searchProductOnCustomApi(String productName, String countryName, String countryCode) {
+        showLoading();
+        String url = "https://barcode-scanner-api-l0kx.onrender.com/fetch-product-details";
+        MediaType JSON = MediaType.get("application/json; charset=utf-8");
+
+        JsonObject jsonBody = new JsonObject();
+        jsonBody.addProperty("productName", productName);
+        jsonBody.addProperty("country", countryName);
+
+        RequestBody body = RequestBody.create(jsonBody.toString(), JSON);
+        Request request = new Request.Builder()
+                .url(url)
+                .post(body)
+                .build();
+
+        httpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.e(TAG, "Custom API search failed, falling back to SerpAPI.", e);
+                runOnUiThread(() -> {
+                    Toast.makeText(AddProductActivity.this, "Search failed. Trying backup...", Toast.LENGTH_SHORT).show();
+                    searchProductOnSerpApi(productName, countryCode);
+                });
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    String responseBody = response.body().string();
+                    try {
+                        JsonObject jsonObject = gson.fromJson(responseBody, JsonObject.class);
+                        runOnUiThread(() -> {
+                            populateUIFromCustomApiResponse(jsonObject);
+                            hideLoading();
+                        });
+                    } catch (JsonSyntaxException e) {
+                        Log.e(TAG, "Failed to parse custom API response, falling back to SerpAPI.", e);
+                        runOnUiThread(() -> {
+                            Toast.makeText(AddProductActivity.this, "Couldn't read search result. Trying backup...", Toast.LENGTH_SHORT).show();
+                            searchProductOnSerpApi(productName, countryCode);
+                        });
+                    }
+                } else {
+                    Log.w(TAG, "Custom API error: " + response.code() + ", falling back to SerpAPI.");
+                    runOnUiThread(() -> {
+                        Toast.makeText(AddProductActivity.this, "Search error (" + response.code() + "). Trying backup...", Toast.LENGTH_SHORT).show();
+                        searchProductOnSerpApi(productName, countryCode);
+                    });
+                }
+            }
+        });
+    }
+
+    private void populateUIFromCustomApiResponse(JsonObject data) {
+        if (data.has("productName") && !data.get("productName").isJsonNull()) {
+            productNameEditText.setText(data.get("productName").getAsString());
+        }
+        if (data.has("brand") && !data.get("brand").isJsonNull()) {
+            brandEditText.setText(data.get("brand").getAsString());
+        }
+        if (data.has("description") && !data.get("description").isJsonNull()) {
+            descriptionEditText.setText(data.get("description").getAsString());
+        }
+        if (data.has("category") && !data.get("category").isJsonNull()) {
+            categoryEditText.setText(data.get("category").getAsString());
+        }
+        if (data.has("price") && !data.get("price").isJsonNull()) {
+            priceEditText.setText(data.get("price").getAsString());
+        }
+        if (data.has("currency") && !data.get("currency").isJsonNull()) {
+            currencyEditText.setText(data.get("currency").getAsString());
+        }
+        if (data.has("manufacturedIn") && !data.get("manufacturedIn").isJsonNull()) {
+            manufacturedInEditText.setText(data.get("manufacturedIn").getAsString());
+        }
+        if (data.has("isEdible") && !data.get("isEdible").isJsonNull()) {
+            isEdibleSwitch.setChecked(data.get("isEdible").getAsBoolean());
+        }
+
+        // Handle arrays by converting them to comma-separated strings
+        if (data.has("ingredients") && data.get("ingredients").isJsonArray()) {
+            ingredientsEditText.setText(jsonArrayToString(data.getAsJsonArray("ingredients")));
+        }
+        if (data.has("availableStores") && data.get("availableStores").isJsonArray()) {
+            availableStoresEditText.setText(jsonArrayToString(data.getAsJsonArray("availableStores")));
+        }
+        if (data.has("healthBenefits") && data.get("healthBenefits").isJsonArray()) {
+            healthBenefitsEditText.setText(jsonArrayToString(data.getAsJsonArray("healthBenefits")));
+        }
+        if (data.has("specifications") && data.get("specifications").isJsonArray()) {
+            specificationsEditText.setText(specificationsJsonArrayToString(data.getAsJsonArray("specifications")));
+        }
+
+        Toast.makeText(this, "Product details populated. Please review.", Toast.LENGTH_LONG).show();
+    }
+
+    private String jsonArrayToString(JsonArray jsonArray) {
+        if (jsonArray == null || jsonArray.size() == 0) return "";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < jsonArray.size(); i++) {
+            sb.append(jsonArray.get(i).getAsString());
+            if (i < jsonArray.size() - 1) {
+                sb.append(", ");
+            }
+        }
+        return sb.toString();
+    }
+
+    private String specificationsJsonArrayToString(JsonArray jsonArray) {
+        if (jsonArray == null || jsonArray.size() == 0) return "";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < jsonArray.size(); i++) {
+            JsonObject spec = jsonArray.get(i).getAsJsonObject();
+            if (spec.has("key") && spec.has("value")) {
+                String key = spec.get("key").getAsString();
+                String value = spec.get("value").getAsString();
+                sb.append(key).append(": ").append(value);
+                if (i < jsonArray.size() - 1) {
+                    sb.append(", ");
+                }
+            }
+        }
+        return sb.toString();
+    }
+
+    // ... all other methods are unchanged ...
+
+    // Fallback search
     private void searchProductOnSerpApi(String productName, String countryCode) {
         showLoading();
         String url = "https://serpapi.com/search.json?engine=google&q=" + productName + "&gl=" + countryCode + "&api_key=" + Constants.SERPAPI_KEY;
@@ -273,7 +419,7 @@ public class AddProductActivity extends AppCompatActivity {
                         JsonArray results = jsonObject.getAsJsonArray("organic_results");
                         if (results.size() > 0) {
                             JsonObject firstResult = results.get(0).getAsJsonObject();
-                            runOnUiThread(() -> populateUI(firstResult));
+                            runOnUiThread(() -> populateUIFromSerpApi(firstResult));
                         } else {
                             runOnUiThread(() -> Toast.makeText(AddProductActivity.this, "No details found.", Toast.LENGTH_SHORT).show());
                         }
@@ -286,7 +432,7 @@ public class AddProductActivity extends AppCompatActivity {
         });
     }
 
-    private void populateUI(JsonObject searchResult) {
+    private void populateUIFromSerpApi(JsonObject searchResult) {
         String snippet = searchResult.has("snippet") ? searchResult.get("snippet").getAsString() : "";
         String title = searchResult.has("title") ? searchResult.get("title").getAsString() : "";
 
@@ -382,13 +528,10 @@ public class AddProductActivity extends AppCompatActivity {
         productJson.addProperty("manufactured_in", manufacturedInEditText.getText().toString());
         productJson.addProperty("is_edible", isEdibleSwitch.isChecked());
         productJson.addProperty("location", (String) countrySpinner.getSelectedItem());
-
-        // NEW: Add all the new fields to the JSON payload
         productJson.addProperty("brand", brandEditText.getText().toString());
 
         String currencyText = currencyEditText.getText().toString();
         if (!currencyText.isEmpty() && !currencyText.equalsIgnoreCase("N/A")) {
-            // Extracts the currency code (e.g., "USD") from "USD ($)"
             String currencyCode = currencyText.split(" ")[0];
             productJson.addProperty("currency", currencyCode);
         }
