@@ -1,6 +1,7 @@
 package com.projects.barcodescanner;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -12,6 +13,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -112,6 +114,7 @@ public class AddProductActivity extends AppCompatActivity {
 
         initializeViews();
         setupCountrySpinner();
+        setupEditTextScrolling(); // <<< *** ADDED THIS LINE ***
 
         httpClient = new OkHttpClient.Builder()
                 .connectTimeout(30, TimeUnit.SECONDS)   // longer connection timeout
@@ -153,6 +156,33 @@ public class AddProductActivity extends AppCompatActivity {
         specificationsEditText = findViewById(R.id.specificationsEditText);
         healthBenefitsEditText = findViewById(R.id.healthBenefitsEditText);
     }
+
+    // <<< *** NEW METHOD TO FIX SCROLLING ***
+    @SuppressLint("ClickableViewAccessibility")
+    private void setupEditTextScrolling() {
+        // List of all multi-line EditTexts that could interfere with the ScrollView
+        EditText[] scrollableEditTexts = {
+                ingredientsEditText,
+                healthBenefitsEditText,
+                specificationsEditText,
+                descriptionEditText
+        };
+
+        for (EditText editText : scrollableEditTexts) {
+            editText.setOnTouchListener((v, event) -> {
+                // We request the parent (ScrollView) to not intercept touch events.
+                // This allows the EditText to handle scrolling its own content.
+                v.getParent().requestDisallowInterceptTouchEvent(true);
+                if ((event.getAction() & MotionEvent.ACTION_UP) != 0) {
+                    // When the touch is released, we allow the parent to intercept events again.
+                    v.getParent().requestDisallowInterceptTouchEvent(false);
+                }
+                // We return false to allow the EditText to handle its default touch events (like cursor placement).
+                return false;
+            });
+        }
+    }
+
 
     private void setupCountrySpinner() {
         String[] isoCountryCodes = Locale.getISOCountries();
@@ -395,8 +425,6 @@ public class AddProductActivity extends AppCompatActivity {
         return sb.toString();
     }
 
-    // ... all other methods are unchanged ...
-
     // Fallback search
     private void searchProductOnSerpApi(String productName, String countryCode) {
         showLoading();
@@ -437,8 +465,8 @@ public class AddProductActivity extends AppCompatActivity {
         String title = searchResult.has("title") ? searchResult.get("title").getAsString() : "";
 
         descriptionEditText.setText(snippet);
-        descriptionEditText.setMovementMethod(new android.text.method.ScrollingMovementMethod());
-        descriptionEditText.setVerticalScrollBarEnabled(true);
+        //descriptionEditText.setMovementMethod(new android.text.method.ScrollingMovementMethod());
+        //descriptionEditText.setVerticalScrollBarEnabled(true);
         manufacturedInEditText.setText((String) countrySpinner.getSelectedItem());
 
         if (snippet.toLowerCase().contains("category:")) {

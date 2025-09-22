@@ -57,8 +57,8 @@
                         android:layout_height="match_parent"
                         android:contentDescription="Product Image Picker"
                         android:padding="28dp"
-                        android:scaleType="centerInside"
-                        android:src="@drawable/no_product" />
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/product_default" />
                 </androidx.cardview.widget.CardView>
 
                 <!-- Barcode -->
@@ -141,20 +141,47 @@
                 </LinearLayout>
 
 
-                <EditText android:id="@+id/ingredientsEditText" style="@style/FormEditText" android:hint="Ingredients" />
-                <EditText android:id="@+id/healthBenefitsEditText" style="@style/FormEditText" android:hint="Health Benefits" />
-                <EditText android:id="@+id/specificationsEditText" style="@style/FormEditText" android:hint="Specifications" />
-                <EditText android:id="@+id/manufacturedInEditText" style="@style/FormEditText" android:hint="Manufactured In" />
+                <EditText android:id="@+id/ingredientsEditText" style="@style/FormEditText" android:hint="Ingredients" android:layout_width="match_parent"
+                    android:layout_height="120dp"
+                    android:gravity="top|start"
+                    android:inputType="textMultiLine"
+                    android:scrollbars="vertical"
+                    android:scrollHorizontally="false"
+                    android:ellipsize="none"
+                    android:padding="12dp"
+                    android:background="@drawable/rounded_edittext"
+                    android:overScrollMode="always" />
+                <EditText android:id="@+id/healthBenefitsEditText" style="@style/FormEditText" android:hint="Health Benefits" android:layout_width="match_parent"
+                    android:layout_height="120dp"
+                    android:gravity="top|start"
+                    android:inputType="textMultiLine"
+                    android:scrollbars="vertical"
+                    android:scrollHorizontally="false"
+                    android:ellipsize="none"
+                    android:padding="12dp"
+                    android:background="@drawable/rounded_edittext"
+                    android:overScrollMode="always"/>
+                <EditText android:id="@+id/specificationsEditText" style="@style/FormEditText" android:hint="Specifications" android:layout_width="match_parent"
+                    android:layout_height="120dp"
+                    android:gravity="top|start"
+                    android:inputType="textMultiLine"
+                    android:scrollbars="vertical"
+                    android:scrollHorizontally="false"
+                    android:ellipsize="none"
+                    android:padding="12dp"
+                    android:background="@drawable/rounded_edittext"
+                    android:overScrollMode="always"/>
+                <EditText android:id="@+id/manufacturedInEditText" style="@style/FormEditText" android:hint="Manufactured In"  />
                 <EditText android:id="@+id/availableStoresEditText" style="@style/FormEditText" android:hint="Available Stores" />
 
                 <!-- Description Field -->
                 <EditText
                     android:id="@+id/descriptionEditText"
                     style="@style/FormEditText"
+                    android:hint="Description"
                     android:layout_width="match_parent"
                     android:layout_height="120dp"
                     android:gravity="top|start"
-                    android:hint="Description"
                     android:inputType="textMultiLine"
                     android:scrollbars="vertical"
                     android:scrollHorizontally="false"
