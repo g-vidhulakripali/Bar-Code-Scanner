@@ -60,6 +60,7 @@ public class SupabaseService {
                 .post(requestBody)
                 .addHeader("Authorization", "Bearer " + Constants.SUPABASE_API_KEY)
                 .addHeader("apikey", Constants.SUPABASE_API_KEY)
+                .addHeader("Content-Type", contentResolver.getType(imageUri))
                 .build();
 
         client.newCall(request).enqueue(callback);

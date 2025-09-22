@@ -480,7 +480,10 @@ public class AddProductActivity extends AppCompatActivity {
         if (selectedImageUri != null) {
             uploadImageAndThenSaveData();
         } else {
-            saveProductData(null);
+            // No image picked → use default placeholder
+            String defaultImageUrl = Constants.SUPABASE_URL +
+                    "/storage/v1/object/public/product-images/default.png";
+            saveProductData(defaultImageUrl);
         }
     }
 
@@ -499,11 +502,16 @@ public class AddProductActivity extends AppCompatActivity {
                         hideLoading();
                     });
                 }
+
                 @Override
                 public void onResponse(@NonNull Call call, @NonNull Response response) {
                     if (response.isSuccessful()) {
-                        String fileName = call.request().url().pathSegments().get(call.request().url().pathSize() - 1);
-                        String publicUrl = Constants.SUPABASE_URL + "/storage/v1/object/public/product-images/" + fileName;
+                        String fileName = call.request().url().pathSegments()
+                                .get(call.request().url().pathSegments().size() - 1);
+
+                        String publicUrl = Constants.SUPABASE_URL +
+                                "/storage/v1/object/public/product-images/" + fileName;
+
                         saveProductData(publicUrl);
                     } else {
                         runOnUiThread(() -> {
