@@ -19,4 +19,6 @@
     <color name="yellow_gradient_end">#FFC107</color>
 
     <color name="off_white">#DBCBAC</color>
+    <color name="scanner_viewfinder_border">#FFFFFF</color>
+    <color name="scanner_laser_color">#FF4081</color> <!-- A bright pink/red -->
 </resources>

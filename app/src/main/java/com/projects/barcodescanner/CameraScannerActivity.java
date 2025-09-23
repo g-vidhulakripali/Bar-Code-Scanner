@@ -10,6 +10,8 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -57,6 +59,10 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
     private ProcessCameraProvider cameraProvider;
     private Camera camera;
 
+    // --- NEW UI ELEMENT VARIABLES ---
+    private ScannerOverlayView scannerOverlay;
+    private TextView instructionText;
+
     // --- Sensor Management ---
     private SensorManager sensorManager;
     // --- Light Sensor ---
@@ -68,8 +74,8 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
     private Sensor accelerometerSensor;
     private long lastShakeTime;
     private float lastX, lastY, lastZ;
-    private static final int SHAKE_THRESHOLD = 800; // Adjust this value for sensitivity
-    private static final int SHAKE_TIMEOUT = 500; // Time in ms to ignore shakes after one is detected
+    private static final int SHAKE_THRESHOLD = 800;
+    private static final int SHAKE_TIMEOUT = 500;
 
     private final AtomicBoolean isProcessing = new AtomicBoolean(false);
 
@@ -89,7 +95,12 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera_scanner);
 
+        // --- MODIFIED: Find all relevant UI elements by their IDs ---
         cameraPreviewView = findViewById(R.id.cameraPreviewView);
+        scannerOverlay = findViewById(R.id.scannerOverlay);
+        instructionText = findViewById(R.id.instructionText);
+        // --- END MODIFICATION ---
+
         MaterialButton closeButton = findViewById(R.id.closeButton);
         closeButton.setOnClickListener(v -> finish());
 
@@ -157,6 +168,10 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
         try {
             cameraProvider.unbindAll();
             camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis);
+            // --- NEW: Start the overlay animation when the camera is successfully bound ---
+            if (scannerOverlay != null) {
+                scannerOverlay.startAnimation();
+            }
         } catch (Exception e) {
             Log.e("CameraScannerActivity", "Use case binding failed", e);
         }
@@ -184,6 +199,15 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
                 .addOnSuccessListener(barcodes -> {
                     if (!barcodes.isEmpty()) {
                         ContextCompat.getMainExecutor(this).execute(() -> {
+                            // --- MODIFIED: Stop animations and hide UI when a barcode is found ---
+                            if (scannerOverlay != null) {
+                                scannerOverlay.stopAnimation();
+                            }
+                            if (instructionText != null) {
+                                instructionText.setVisibility(View.GONE);
+                            }
+                            // --- END MODIFICATION ---
+
                             setTorchState(false); // Turn off torch before stopping camera
                             if (cameraProvider != null) {
                                 cameraProvider.unbindAll();
@@ -216,9 +240,7 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
                         JsonArray jsonArray = JsonParser.parseString(responseBody).getAsJsonArray();
 
                         if (jsonArray.size() > 0) {
-                            // --- PRODUCT FOUND ---
                             JsonObject productObject = jsonArray.get(0).getAsJsonObject();
-
                             String name = "Product Name";
                             if (productObject.has("product_name") && !productObject.get("product_name").isJsonNull()) {
                                 name = productObject.get("product_name").getAsString();
@@ -231,7 +253,6 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
                             if (productObject.has("image_url") && !productObject.get("image_url").isJsonNull()) {
                                 imageUrl = productObject.get("image_url").getAsString();
                             }
-
                             final String finalName = name;
                             final String finalDescription = description;
                             final String finalImageUrl = imageUrl;
@@ -269,8 +290,15 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
     @Override
     public void onScanCompleted() {
         isProcessing.set(false);
+
+        // --- NEW: Show UI elements again when restarting the scan ---
+        if (instructionText != null) {
+            instructionText.setVisibility(View.VISIBLE);
+        }
+        // --- END NEW ---
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            startCamera();
+            startCamera(); // This will re-trigger bindCameraUseCases, which restarts the animation
         }
     }
 
@@ -281,29 +309,18 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
         }
     }
 
-    /**
-     * Dismisses any open bottom sheets and restarts the camera for scanning.
-     * Triggered by the shake gesture.
-     */
     private void restartScanning() {
         runOnUiThread(() -> {
-            // Only restart if a popup is currently showing (isProcessing is true)
             if (!isProcessing.get()) return;
-
             Toast.makeText(this, "Restarting Scan...", Toast.LENGTH_SHORT).show();
-
-            // Find and dismiss any open bottom sheets
             Fragment foundSheet = getSupportFragmentManager().findFragmentByTag("ProductFoundBottomSheetTag");
             if (foundSheet instanceof BottomSheetDialogFragment) {
                 ((BottomSheetDialogFragment) foundSheet).dismiss();
             }
-
             Fragment notFoundSheet = getSupportFragmentManager().findFragmentByTag("ProductNotFoundBottomSheetTag");
             if (notFoundSheet instanceof BottomSheetDialogFragment) {
                 ((BottomSheetDialogFragment) notFoundSheet).dismiss();
             }
-
-            // Manually trigger the restart logic
             onScanCompleted();
         });
     }
@@ -312,7 +329,6 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        // Use a switch statement to handle multiple sensors
         switch (event.sensor.getType()) {
             case Sensor.TYPE_LIGHT:
                 handleLightSensor(event);
@@ -327,9 +343,9 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
         float lux = event.values[0];
         if (camera != null) {
             if (lux < DARK_THRESHOLD && !isTorchOn) {
-                setTorchState(true); // Turn torch ON
+                setTorchState(true);
             } else if (lux >= DARK_THRESHOLD && isTorchOn) {
-                setTorchState(false); // Turn torch OFF
+                setTorchState(false);
             }
             Log.d("LightSensor", "Lux value: " + lux);
         }
@@ -337,22 +353,17 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
 
     private void handleAccelerometer(SensorEvent event) {
         long currentTime = System.currentTimeMillis();
-        // Check if enough time has passed since the last shake
         if ((currentTime - lastShakeTime) > SHAKE_TIMEOUT) {
             float x = event.values[0];
             float y = event.values[1];
             float z = event.values[2];
-
             float deltaX = x - lastX;
             float deltaY = y - lastY;
             float deltaZ = z - lastZ;
-
             lastX = x;
             lastY = y;
             lastZ = z;
-
             double speed = Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ) / (currentTime - lastShakeTime) * 10000;
-
             if (speed > SHAKE_THRESHOLD) {
                 Log.d("ShakeDetector", "Shake detected with speed: " + speed);
                 lastShakeTime = currentTime;
@@ -366,12 +377,16 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
         // Not needed for this implementation.
     }
 
-    // --- LIFECYCLE MANAGEMENT FOR SENSORS ---
+    // --- LIFECYCLE MANAGEMENT FOR SENSORS AND ANIMATION ---
 
     @Override
     protected void onResume() {
         super.onResume();
-        // Register Light Sensor
+        // --- NEW: Start animation when the activity resumes ---
+        if (scannerOverlay != null) {
+            scannerOverlay.startAnimation();
+        }
+
         if (lightSensor != null) {
             sensorManager.registerListener(this, lightSensor, SensorManager.SENSOR_DELAY_UI);
             Log.d("SensorManager", "Real light sensor registered");
@@ -379,21 +394,16 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
             Log.d("SensorManager", "No light sensor found, starting simulation...");
             simulateLuxValues();
         }
-
-        // Register Accelerometer Sensor
         if (accelerometerSensor != null) {
             sensorManager.registerListener(this, accelerometerSensor, SensorManager.SENSOR_DELAY_NORMAL);
             Log.d("SensorManager", "Accelerometer registered");
         }
     }
 
-
     private void simulateLuxValues() {
-        final float[] testLuxValues = {5f, 50f, 10f, 100f}; // dark → bright → dark → bright
-        final int delay = 2000; // 2 seconds
-
+        final float[] testLuxValues = {5f, 50f, 10f, 100f};
+        final int delay = 2000;
         android.os.Handler handler = new android.os.Handler(getMainLooper());
-
         for (int i = 0; i < testLuxValues.length; i++) {
             float lux = testLuxValues[i];
             handler.postDelayed(() -> {
@@ -409,15 +419,16 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
         }
     }
 
-
     @Override
     protected void onPause() {
         super.onPause();
-        // This single line unregisters ALL listeners for this context (activity),
-        // which is efficient for both the light and accelerometer sensors.
+        // --- NEW: Stop animation when the activity is paused to save resources ---
+        if (scannerOverlay != null) {
+            scannerOverlay.stopAnimation();
+        }
+
         sensorManager.unregisterListener(this);
         Log.d("SensorManager", "All sensors unregistered");
-
         setTorchState(false);
     }
 

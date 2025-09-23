@@ -39,7 +39,7 @@ public class ProductDetailActivity extends AppCompatActivity {
 
     private ImageView productImageView;
     private TextView productNameTextView, brandTextView, priceTextView, availabilityTextView, countryFlagTextView;
-    private Button updateButton;
+//    private Button updateButton;
     private ProgressBar progressBar;
 
     private View descriptionCard, healthBenefitsCard, additionalDetailsCard;
@@ -51,7 +51,7 @@ public class ProductDetailActivity extends AppCompatActivity {
 
         initializeViews();
 
-        updateButton.setOnClickListener(v -> Toast.makeText(this, "Update Clicked!", Toast.LENGTH_SHORT).show());
+//        updateButton.setOnClickListener(v -> Toast.makeText(this, "Update Clicked!", Toast.LENGTH_SHORT).show());
 
         String barcode = getIntent().getStringExtra("PRODUCT_BARCODE");
         Log.d(TAG, "onCreate: Received barcode from Intent: " + barcode);
@@ -71,7 +71,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         priceTextView = findViewById(R.id.priceTextView);
         availabilityTextView = findViewById(R.id.availabilityTextView);
         countryFlagTextView = findViewById(R.id.countryFlagTextView);
-        updateButton = findViewById(R.id.updateButton);
+//        updateButton = findViewById(R.id.updateButton);
         progressBar = findViewById(R.id.progressBar);
         descriptionCard = findViewById(R.id.descriptionCard);
         healthBenefitsCard = findViewById(R.id.healthBenefitsCard);
@@ -187,7 +187,7 @@ public class ProductDetailActivity extends AppCompatActivity {
     private void populateUi(Product product) {
         Log.d(TAG, "populateUi: Populating UI with product: " + product.getProductName());
         progressBar.setVisibility(View.GONE);
-        updateButton.setVisibility(View.VISIBLE);
+//        updateButton.setVisibility(View.VISIBLE);
 
         productNameTextView.setText(product.getProductName());
         brandTextView.setText("by " + product.getBrand());

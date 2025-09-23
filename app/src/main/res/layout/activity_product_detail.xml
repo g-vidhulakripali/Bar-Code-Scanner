@@ -117,18 +117,18 @@
             android:visibility="gone"
             tools:visibility="visible" />
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/updateButton"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/button_background_gradient"
-            android:text="Update"
-            android:textColor="@android:color/white"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:visibility="gone"
-            tools:visibility="visible" />
+<!--        <androidx.appcompat.widget.AppCompatButton-->
+<!--            android:id="@+id/updateButton"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="50dp"-->
+<!--            android:layout_marginTop="16dp"-->
+<!--            android:background="@drawable/button_background_gradient"-->
+<!--            android:text="Update"-->
+<!--            android:textColor="@android:color/white"-->
+<!--            android:textSize="18sp"-->
+<!--            android:textStyle="bold"-->
+<!--            android:visibility="gone"-->
+<!--            tools:visibility="visible" />-->
 
     </LinearLayout>
 </ScrollView>
