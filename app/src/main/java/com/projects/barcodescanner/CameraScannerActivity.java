@@ -10,7 +10,6 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -25,7 +24,9 @@ import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
 
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.button.MaterialButton;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonArray;
@@ -56,15 +57,19 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
     private ProcessCameraProvider cameraProvider;
     private Camera camera;
 
-    // --- Light Sensor and Torch Control ---
+    // --- Sensor Management ---
     private SensorManager sensorManager;
+    // --- Light Sensor ---
     private Sensor lightSensor;
     private boolean isTorchOn = false;
-    // Threshold in LUX for considering the environment as "dark"
     private static final float DARK_THRESHOLD = 15.0f;
-
     private boolean simulateLux = false;
-    // --- End Light Sensor ---
+    // --- Accelerometer for Shake Detection ---
+    private Sensor accelerometerSensor;
+    private long lastShakeTime;
+    private float lastX, lastY, lastZ;
+    private static final int SHAKE_THRESHOLD = 800; // Adjust this value for sensitivity
+    private static final int SHAKE_TIMEOUT = 500; // Time in ms to ignore shakes after one is detected
 
     private final AtomicBoolean isProcessing = new AtomicBoolean(false);
 
@@ -86,18 +91,24 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
 
         cameraPreviewView = findViewById(R.id.cameraPreviewView);
         MaterialButton closeButton = findViewById(R.id.closeButton);
-
         closeButton.setOnClickListener(v -> finish());
 
-        // Initialize Light Sensor
-        // Initialize Light Sensor
+        // --- Initialize ALL Sensors ---
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+
+        // Initialize Light Sensor
         lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
         if (lightSensor == null) {
             Toast.makeText(this, "No light sensor found. Auto-torch simulation enabled.", Toast.LENGTH_SHORT).show();
-            simulateLux = true; // <-- enable simulation
+            simulateLux = true; // enable simulation
         }
 
+        // Initialize Accelerometer Sensor
+        accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        if (accelerometerSensor == null) {
+            Toast.makeText(this, "No accelerometer found. Shake to restart is disabled.", Toast.LENGTH_SHORT).show();
+        }
+        lastShakeTime = System.currentTimeMillis();
 
 
         cameraExecutor = Executors.newSingleThreadExecutor();
@@ -227,7 +238,6 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
                             runOnUiThread(() -> showProductFoundPopup(barcode, finalName, finalDescription, finalImageUrl));
 
                         } else {
-                            // --- PRODUCT NOT FOUND ---
                             runOnUiThread(() -> showProductNotFoundPopup(barcode));
                         }
                     } catch (Exception e) {
@@ -271,20 +281,82 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
         }
     }
 
+    /**
+     * Dismisses any open bottom sheets and restarts the camera for scanning.
+     * Triggered by the shake gesture.
+     */
+    private void restartScanning() {
+        runOnUiThread(() -> {
+            // Only restart if a popup is currently showing (isProcessing is true)
+            if (!isProcessing.get()) return;
+
+            Toast.makeText(this, "Restarting Scan...", Toast.LENGTH_SHORT).show();
+
+            // Find and dismiss any open bottom sheets
+            Fragment foundSheet = getSupportFragmentManager().findFragmentByTag("ProductFoundBottomSheetTag");
+            if (foundSheet instanceof BottomSheetDialogFragment) {
+                ((BottomSheetDialogFragment) foundSheet).dismiss();
+            }
+
+            Fragment notFoundSheet = getSupportFragmentManager().findFragmentByTag("ProductNotFoundBottomSheetTag");
+            if (notFoundSheet instanceof BottomSheetDialogFragment) {
+                ((BottomSheetDialogFragment) notFoundSheet).dismiss();
+            }
+
+            // Manually trigger the restart logic
+            onScanCompleted();
+        });
+    }
+
     // --- SENSOR EVENT LISTENER IMPLEMENTATION ---
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
-            float lux = event.values[0];
-            // Check if the camera is active before trying to control the torch
-            if (camera != null) {
-                if (lux < DARK_THRESHOLD && !isTorchOn) {
-                    setTorchState(true); // Turn torch ON
-                } else if (lux >= DARK_THRESHOLD && isTorchOn) {
-                    setTorchState(false); // Turn torch OFF
-                }
-                Log.d("LightSensor", "Lux value: " + lux);
+        // Use a switch statement to handle multiple sensors
+        switch (event.sensor.getType()) {
+            case Sensor.TYPE_LIGHT:
+                handleLightSensor(event);
+                break;
+            case Sensor.TYPE_ACCELEROMETER:
+                handleAccelerometer(event);
+                break;
+        }
+    }
+
+    private void handleLightSensor(SensorEvent event) {
+        float lux = event.values[0];
+        if (camera != null) {
+            if (lux < DARK_THRESHOLD && !isTorchOn) {
+                setTorchState(true); // Turn torch ON
+            } else if (lux >= DARK_THRESHOLD && isTorchOn) {
+                setTorchState(false); // Turn torch OFF
+            }
+            Log.d("LightSensor", "Lux value: " + lux);
+        }
+    }
+
+    private void handleAccelerometer(SensorEvent event) {
+        long currentTime = System.currentTimeMillis();
+        // Check if enough time has passed since the last shake
+        if ((currentTime - lastShakeTime) > SHAKE_TIMEOUT) {
+            float x = event.values[0];
+            float y = event.values[1];
+            float z = event.values[2];
+
+            float deltaX = x - lastX;
+            float deltaY = y - lastY;
+            float deltaZ = z - lastZ;
+
+            lastX = x;
+            lastY = y;
+            lastZ = z;
+
+            double speed = Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ) / (currentTime - lastShakeTime) * 10000;
+
+            if (speed > SHAKE_THRESHOLD) {
+                Log.d("ShakeDetector", "Shake detected with speed: " + speed);
+                lastShakeTime = currentTime;
+                restartScanning();
             }
         }
     }
@@ -294,17 +366,24 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
         // Not needed for this implementation.
     }
 
-    // --- LIFECYCLE MANAGEMENT FOR SENSOR ---
+    // --- LIFECYCLE MANAGEMENT FOR SENSORS ---
 
     @Override
     protected void onResume() {
         super.onResume();
+        // Register Light Sensor
         if (lightSensor != null) {
             sensorManager.registerListener(this, lightSensor, SensorManager.SENSOR_DELAY_UI);
-            Log.d("LightSensor", "Real light sensor registered");
-        } else {
-            Log.d("LightSensor", "No light sensor found, starting simulation...");
+            Log.d("SensorManager", "Real light sensor registered");
+        } else if(simulateLux) {
+            Log.d("SensorManager", "No light sensor found, starting simulation...");
             simulateLuxValues();
+        }
+
+        // Register Accelerometer Sensor
+        if (accelerometerSensor != null) {
+            sensorManager.registerListener(this, accelerometerSensor, SensorManager.SENSOR_DELAY_NORMAL);
+            Log.d("SensorManager", "Accelerometer registered");
         }
     }
 
@@ -326,18 +405,19 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
                         setTorchState(false);
                     }
                 }
-            }, i * delay);
+            }, (long) i * delay);
         }
     }
-
 
 
     @Override
     protected void onPause() {
         super.onPause();
-        // Unregister the listener when the activity is paused to save battery
+        // This single line unregisters ALL listeners for this context (activity),
+        // which is efficient for both the light and accelerometer sensors.
         sensorManager.unregisterListener(this);
-        // Also ensure the torch is off when leaving the screen
+        Log.d("SensorManager", "All sensors unregistered");
+
         setTorchState(false);
     }
 
