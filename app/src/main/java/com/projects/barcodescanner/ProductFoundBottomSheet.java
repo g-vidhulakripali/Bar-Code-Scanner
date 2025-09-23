@@ -1,6 +1,7 @@
 package com.projects.barcodescanner;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -87,8 +88,13 @@ public class ProductFoundBottomSheet extends BottomSheetDialogFragment {
         }
 
         viewAllButton.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "View All Details clicked!", Toast.LENGTH_SHORT).show();
-            dismiss();
+            if (getContext() != null && getArguments() != null) {
+                String barcode = getArguments().getString(ARG_BARCODE);
+                Intent intent = new Intent(getContext(), ProductDetailActivity.class);
+                intent.putExtra("PRODUCT_BARCODE", barcode);
+                startActivity(intent);
+                dismiss(); // Close the bottom sheet after starting the new activity
+            }
         });
     }
 

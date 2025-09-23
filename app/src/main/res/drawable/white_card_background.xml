@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This drawable provides a solid white background but keeps the rounded corners and subtle border -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!-- CHANGED: The color is now solid white instead of semi-transparent -->
+    <solid android:color="@android:color/white" />
+
+    <!-- UNCHANGED: Keeps the rounded corners -->
+    <corners android:radius="20dp" />
+
+    <!-- UNCHANGED: Keeps the subtle white border for a nice edge effect -->
+    <stroke
+        android:width="1dp"
+        android:color="#FFFFFF" />
+
+</shape>

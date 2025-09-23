@@ -17,4 +17,6 @@
     <!-- Gradient Colors for the Button -->
     <color name="yellow_gradient_start">#FFD60A</color>
     <color name="yellow_gradient_end">#FFC107</color>
+
+    <color name="off_white">#DBCBAC</color>
 </resources>
