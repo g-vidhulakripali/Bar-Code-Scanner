@@ -158,20 +158,30 @@ public class ProductDetailActivity extends AppCompatActivity {
     }
 
     private List<String> parseStringList(Gson gson, JsonObject obj, String key) {
-        String jsonString = getString(obj, key);
-        if (jsonString == null || jsonString.isEmpty()) {
+        if (!obj.has(key) || obj.get(key).isJsonNull()) {
             return Collections.emptyList();
         }
+
         try {
-            // First parse string into a JsonElement
+            // Case 1: Supabase returns a proper JSON array (ideal case)
+            if (obj.get(key).isJsonArray()) {
+                Type listType = new TypeToken<List<String>>() {}.getType();
+                return gson.fromJson(obj.get(key).getAsJsonArray(), listType);
+            }
+
+            // Case 2: Supabase stored array as a string -> parse string into JSON
+            String jsonString = obj.get(key).getAsString();
             JsonArray jsonArray = JsonParser.parseString(jsonString).getAsJsonArray();
+
             Type listType = new TypeToken<List<String>>() {}.getType();
             return gson.fromJson(jsonArray, listType);
+
         } catch (Exception e) {
-            Log.e(TAG, "Failed to parse string to list for key: '" + key + "'. Value was: " + jsonString, e);
+            Log.e(TAG, "Failed to parse list for key: " + key + " | Value: " + obj.get(key), e);
             return Collections.emptyList();
         }
     }
+
 
 
     private void populateUi(Product product) {
