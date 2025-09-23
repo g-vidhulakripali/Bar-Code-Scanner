@@ -2,7 +2,12 @@ package com.projects.barcodescanner;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.pm.PackageManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -43,7 +48,7 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
 
-public class CameraScannerActivity extends AppCompatActivity implements ProductNotFoundBottomSheet.OnScanCompletionListener, ProductFoundBottomSheet.OnScanCompletionListener {
+public class CameraScannerActivity extends AppCompatActivity implements ProductNotFoundBottomSheet.OnScanCompletionListener, ProductFoundBottomSheet.OnScanCompletionListener, SensorEventListener {
 
     private ExecutorService cameraExecutor;
     private PreviewView cameraPreviewView;
@@ -51,8 +56,16 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
     private ProcessCameraProvider cameraProvider;
     private Camera camera;
 
-    private MaterialButton torchButton;
+    // --- Light Sensor and Torch Control ---
+    private SensorManager sensorManager;
+    private Sensor lightSensor;
     private boolean isTorchOn = false;
+    // Threshold in LUX for considering the environment as "dark"
+    private static final float DARK_THRESHOLD = 15.0f;
+
+    private boolean simulateLux = false;
+    // --- End Light Sensor ---
+
     private final AtomicBoolean isProcessing = new AtomicBoolean(false);
 
     private final ActivityResultLauncher<String> requestPermissionLauncher =
@@ -65,17 +78,27 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
                 }
             });
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera_scanner);
 
         cameraPreviewView = findViewById(R.id.cameraPreviewView);
-        torchButton = findViewById(R.id.torchButton);
         MaterialButton closeButton = findViewById(R.id.closeButton);
 
         closeButton.setOnClickListener(v -> finish());
-        torchButton.setOnClickListener(v -> toggleTorch());
+
+        // Initialize Light Sensor
+        // Initialize Light Sensor
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+        if (lightSensor == null) {
+            Toast.makeText(this, "No light sensor found. Auto-torch simulation enabled.", Toast.LENGTH_SHORT).show();
+            simulateLux = true; // <-- enable simulation
+        }
+
+
 
         cameraExecutor = Executors.newSingleThreadExecutor();
         checkCameraPermission();
@@ -123,12 +146,6 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
         try {
             cameraProvider.unbindAll();
             camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis);
-            if (camera.getCameraInfo().hasFlashUnit()) {
-                torchButton.setVisibility(View.VISIBLE);
-                updateTorchIcon();
-            } else {
-                torchButton.setVisibility(View.GONE);
-            }
         } catch (Exception e) {
             Log.e("CameraScannerActivity", "Use case binding failed", e);
         }
@@ -156,10 +173,10 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
                 .addOnSuccessListener(barcodes -> {
                     if (!barcodes.isEmpty()) {
                         ContextCompat.getMainExecutor(this).execute(() -> {
+                            setTorchState(false); // Turn off torch before stopping camera
                             if (cameraProvider != null) {
                                 cameraProvider.unbindAll();
                             }
-                            resetTorchUI();
                         });
                         String barcodeValue = barcodes.get(0).getRawValue();
                         Log.d("ScannerDebug", "Barcode Scanned: " + barcodeValue);
@@ -228,46 +245,100 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
     private void showProductNotFoundPopup(String barcode) {
         ProductNotFoundBottomSheet bottomSheet = ProductNotFoundBottomSheet.newInstance(barcode);
         bottomSheet.setOnScanCompletionListener(this);
-        bottomSheet.setCancelable(true); // Prevent dismissing by clicking outside
+        bottomSheet.setCancelable(true);
         bottomSheet.show(getSupportFragmentManager(), "ProductNotFoundBottomSheetTag");
     }
 
     private void showProductFoundPopup(String barcode, String name, String description, String imageUrl) {
         ProductFoundBottomSheet bottomSheet = ProductFoundBottomSheet.newInstance(barcode, name, description, imageUrl);
         bottomSheet.setOnScanCompletionListener(this);
-        bottomSheet.setCancelable(true); // Prevent dismissing by clicking outside
+        bottomSheet.setCancelable(true);
         bottomSheet.show(getSupportFragmentManager(), "ProductFoundBottomSheetTag");
     }
 
     @Override
     public void onScanCompleted() {
         isProcessing.set(false);
-        // Resume scanning only if permission is still granted
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             startCamera();
         }
     }
 
-    private void toggleTorch() {
-        if (camera == null || !camera.getCameraInfo().hasFlashUnit()) return;
-        isTorchOn = !isTorchOn;
-        camera.getCameraControl().enableTorch(isTorchOn);
-        updateTorchIcon();
-    }
-
-    private void resetTorchUI() {
-        if (isTorchOn) {
-            isTorchOn = false;
-            updateTorchIcon();
+    private void setTorchState(boolean state) {
+        if (camera != null && camera.getCameraInfo().hasFlashUnit()) {
+            camera.getCameraControl().enableTorch(state);
+            isTorchOn = state;
         }
     }
 
-    private void updateTorchIcon() {
-        if (isTorchOn) {
-            torchButton.setIconResource(R.drawable.ic_flashlight_on);
+    // --- SENSOR EVENT LISTENER IMPLEMENTATION ---
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
+            float lux = event.values[0];
+            // Check if the camera is active before trying to control the torch
+            if (camera != null) {
+                if (lux < DARK_THRESHOLD && !isTorchOn) {
+                    setTorchState(true); // Turn torch ON
+                } else if (lux >= DARK_THRESHOLD && isTorchOn) {
+                    setTorchState(false); // Turn torch OFF
+                }
+                Log.d("LightSensor", "Lux value: " + lux);
+            }
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        // Not needed for this implementation.
+    }
+
+    // --- LIFECYCLE MANAGEMENT FOR SENSOR ---
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (lightSensor != null) {
+            sensorManager.registerListener(this, lightSensor, SensorManager.SENSOR_DELAY_UI);
+            Log.d("LightSensor", "Real light sensor registered");
         } else {
-            torchButton.setIconResource(R.drawable.ic_flashlight_off);
+            Log.d("LightSensor", "No light sensor found, starting simulation...");
+            simulateLuxValues();
         }
+    }
+
+
+    private void simulateLuxValues() {
+        final float[] testLuxValues = {5f, 50f, 10f, 100f}; // dark → bright → dark → bright
+        final int delay = 2000; // 2 seconds
+
+        android.os.Handler handler = new android.os.Handler(getMainLooper());
+
+        for (int i = 0; i < testLuxValues.length; i++) {
+            float lux = testLuxValues[i];
+            handler.postDelayed(() -> {
+                Log.d("LightSensor", "Simulated Lux value: " + lux);
+                if (camera != null) {
+                    if (lux < DARK_THRESHOLD && !isTorchOn) {
+                        setTorchState(true);
+                    } else if (lux >= DARK_THRESHOLD && isTorchOn) {
+                        setTorchState(false);
+                    }
+                }
+            }, i * delay);
+        }
+    }
+
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Unregister the listener when the activity is paused to save battery
+        sensorManager.unregisterListener(this);
+        // Also ensure the torch is off when leaving the screen
+        setTorchState(false);
     }
 
     @Override

@@ -89,24 +89,7 @@
             app:layout_constraintTop_toTopOf="parent"
             app:strokeColor="@android:color/white" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/torchButton"
-            style="@style/Widget.MaterialComponents.Button.Icon"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:insetLeft="0dp"
-            android:insetTop="0dp"
-            android:insetRight="0dp"
-            android:insetBottom="0dp"
-            app:backgroundTint="#80FFFFFF"
-            app:cornerRadius="24dp"
-            app:icon="@drawable/ic_flashlight_off"
-            app:iconGravity="textStart"
-            app:iconPadding="0dp"
-            app:iconTint="@android:color/white"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+        <!-- TORCH BUTTON REMOVED FROM HERE -->
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
