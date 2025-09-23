@@ -66,6 +66,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.0.1")
 
     implementation("com.squareup.picasso:picasso:2.8")
+    implementation("androidx.viewpager2:viewpager2:1.0.0")
 
     // UI Components
     implementation("com.google.android.material:material:1.8.0")

@@ -119,4 +119,42 @@ public class SupabaseService {
 
         client.newCall(request).enqueue(callback);
     }
+
+    /**
+     * Fetches a list of products based on a location identifier.
+     * @param location The location to filter products by.
+     * @param callback OkHttp callback to handle the response.
+     */
+    public static void getProductsByLocation(String location, Callback callback) {
+        String urlWithQuery = PRODUCTS_ENDPOINT + "?location=eq." + location + "&select=*";
+
+        Request request = new Request.Builder()
+                .url(urlWithQuery)
+                .get()
+                .addHeader("apikey", Constants.SUPABASE_API_KEY)
+                .addHeader("Authorization", "Bearer " + Constants.SUPABASE_API_KEY)
+                .build();
+
+        client.newCall(request).enqueue(callback);
+    }
+
+    /**
+     * NEW METHOD: Fetches a distinct list of all locations (countries) from the products table.
+     * This requires a PostgreSQL function to be created in the Supabase SQL Editor.
+     * @param callback OkHttp callback to handle the response.
+     */
+    public static void getDistinctLocations(Callback callback) {
+        // This URL points to a Remote Procedure Call (RPC)
+        String url = Constants.SUPABASE_URL + "/rest/v1/rpc/get_distinct_locations";
+
+        Request request = new Request.Builder()
+                .url(url)
+                .post(RequestBody.create(new byte[0])) // RPCs are POST requests
+                .addHeader("apikey", Constants.SUPABASE_API_KEY)
+                .addHeader("Authorization", "Bearer " + Constants.SUPABASE_API_KEY)
+                .build();
+
+        client.newCall(request).enqueue(callback);
+    }
+
 }

@@ -37,13 +37,10 @@ public class LoginActivity extends AppCompatActivity {
             Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
             startActivity(intent);
         });
-//        binding.tvForgotPassword.setOnClickListener(v ->
-//                Toast.makeText(this, "Forgot Password clicked", Toast.LENGTH_SHORT).show()
-//        );
     }
 
     private void loginUser() {
-        String email = binding.etEmail.getText().toString().trim(); // Changed from username
+        String email = binding.etEmail.getText().toString().trim();
         String password = binding.etPassword.getText().toString().trim();
 
         if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
@@ -51,7 +48,6 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        // Optimized: One call to log in and get all necessary data
         SupabaseAuth.loginUser(email, password, new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -66,16 +62,19 @@ public class LoginActivity extends AppCompatActivity {
                         JSONObject json = new JSONObject(body);
                         String accessToken = json.getString("access_token");
                         JSONObject userObject = json.getJSONObject("user");
-                        JSONObject metadata = userObject.getJSONObject("user_metadata");
 
-                        // Get username and role directly from metadata (thanks to our trigger!)
+                        // --- FIX: Get the unique user ID from the response ---
+                        String userId = userObject.getString("id");
+
+                        JSONObject metadata = userObject.getJSONObject("user_metadata");
                         String username = metadata.getString("username");
                         String role = metadata.getString("role");
 
-                        // Save everything to SharedPreferences
+                        // Save everything to SharedPreferences, including the userId
                         SharedPreferences.Editor editor = sharedPreferences.edit();
                         editor.putBoolean("isLoggedIn", true);
-                        editor.putString("username", username);
+                        editor.putString("userId", userId); // <-- SAVE THE USER ID
+                        editor.putString("username", username); // Still useful as a cache
                         editor.putString("role", role);
                         editor.putString("token", accessToken);
                         editor.apply();

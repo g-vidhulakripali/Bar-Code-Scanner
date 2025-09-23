@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Layer 1: The "Shadow" - A slightly larger, darker circle offset a bit -->
+    <item
+        android:left="2dp"
+        android:top="2dp"
+        android:right="0dp"
+        android:bottom="0dp"> <!-- Adjust dp values to control shadow offset and direction -->
+        <shape android:shape="oval">
+            <solid android:color="#40000000" /> <!-- Semi-transparent black for shadow -->
+            <!-- Adjust alpha (first two hex digits) for shadow intensity -->
+            <!-- Optional: If you want the shadow to be a bit blurred, you could try
+                 a gradient, but it's hard to get a true blur this way.
+            <gradient
+                android:type="radial"
+                android:gradientRadius="100%"
+                android:startColor="#50000000"
+                android:endColor="@android:color/transparent" />
+            -->
+        </shape>
+    </item>
+
+    <!-- Layer 2: The Main Yellow Circle - Drawn on top of the shadow layer -->
+    <item
+        android:left="0dp"
+        android:top="0dp"
+        android:right="2dp"
+        android:bottom="2dp"> <!-- These values should counteract the shadow's offset
+                                   so the main circle appears centered within the View's bounds,
+                                   with the shadow peeking out. -->
+        <shape android:shape="oval">
+            <solid android:color="#FFEB3B" /> <!-- Your desired yellow color -->
+            <!-- Or use @color/your_app_yellow -->
+        </shape>
+    </item>
+
+</layer-list>
