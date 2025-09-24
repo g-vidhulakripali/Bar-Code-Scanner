@@ -50,7 +50,7 @@ It allows users to log in, register, scan barcodes, and manage product details e
 ---
 
 ## Authors
-- [Your Names & Matrikel Numbers Here]
+- Vidhula Kripali Ganesh Babu
 
 ---
 
