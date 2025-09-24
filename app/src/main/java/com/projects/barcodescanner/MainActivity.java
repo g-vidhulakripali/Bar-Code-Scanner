@@ -238,6 +238,7 @@ public class MainActivity extends AppCompatActivity {
                             p.setProductName(obj.optString("product_name"));
                             p.setBarcode(obj.optString("barcode"));
                             p.setImageUrl(obj.optString("image_url"));
+                            p.setEdible(obj.optBoolean("is_edible"));
                             productList.add(p);
                         }
                     } catch (JSONException e) {

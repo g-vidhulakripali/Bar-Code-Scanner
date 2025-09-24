@@ -5,50 +5,116 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="16dp"
-    app:cardBackgroundColor="@color/app_card_background"
+    app:cardBackgroundColor="@android:color/white"
     app:cardCornerRadius="20dp"
-    app:cardElevation="0dp">
+    app:cardElevation="0dp"
+    app:strokeColor="#FFEB3B"
+    app:strokeWidth="2dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:padding="24dp">
 
+        <!-- Barcode Number -->
+        <TextView
+            android:id="@+id/barcodeNumberTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:letterSpacing="0.1"
+            android:textColor="@android:color/black"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="123456789012" />
+
+        <!-- Barcode Image -->
+        <ImageView
+            android:id="@+id/barcodeImageView"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="8dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/ic_barcode_logo_black"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/barcodeNumberTextView"
+            tools:srcCompat="@drawable/ic_barcode_logo_black" />
+
+        <!-- Product Image -->
         <ImageView
             android:id="@+id/productImageView"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_margin="16dp"
+            android:layout_marginTop="24dp"
             android:scaleType="fitCenter"
             app:layout_constraintDimensionRatio="1:1"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/barcodeImageView"
             app:layout_constraintBottom_toTopOf="@id/productNameTextView"
-            tools:srcCompat="@tools:sample/avatars" />
+            tools:srcCompat="@drawable/product_default" />
 
+        <!-- Product Name -->
         <TextView
             android:id="@+id/productNameTextView"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textColor="@color/app_dark_grey"
-            android:textSize="18sp"
+            android:layout_marginTop="24dp"
+            android:gravity="center"
+            android:textColor="@android:color/black"
+            android:textSize="16sp"
             android:textStyle="bold"
-            app:layout_constraintBottom_toTopOf="@id/barcodeTextView"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            tools:text="Coffee Blend" />
+            app:layout_constraintBottom_toTopOf="@id/edibleStatusLayout"
+            app:layout_constraintTop_toBottomOf="@id/productImageView"
+            tools:text="Can Dog Food\nFood" />
 
-        <TextView
-            android:id="@+id/barcodeTextView"
+        <!-- Edible Status Layout -->
+        <LinearLayout
+            android:id="@+id/edibleStatusLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:textColor="@color/app_light_grey"
-            android:textSize="14sp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toTopOf="@id/viewMoreButton"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <View
+                android:id="@+id/edibleStatusDot"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                tools:background="@drawable/bg_circle_green" />
+
+            <TextView
+                android:id="@+id/edibleStatusTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="EDIBLE"
+                tools:textColor="#4CAF50"/>
+        </LinearLayout>
+
+        <!-- View More Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/viewMoreButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/button_background_gradient"
+            android:paddingVertical="12dp"
+            android:text="VIEW MORE"
+            android:textColor="@android:color/black"
+            app:backgroundTint="@null"
+            app:cornerRadius="24dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            tools:text="BARCODE: 1234567890" />
+            app:layout_constraintStart_toStartOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>
