@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/white_card_background"
+    android:padding="7dp"
+    tools:context=".AddProductActivity">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/glass_background_yellow_gradient"
+        android:padding="20dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Add New Product"
+                android:textColor="@color/white"
+                android:textSize="28sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:text="Fill in the details below"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp" />
+
+            <!-- Form Container with Glass Effect -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/glass_background"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <!-- Image Upload Section -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/imagePickerCard"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginBottom="16dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp">
+
+                    <ImageView
+                        android:id="@+id/productImageView"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="Product Image Picker"
+                        android:padding="28dp"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/product_default" />
+                </androidx.cardview.widget.CardView>
+
+                <!-- Barcode -->
+                <EditText
+                    android:id="@+id/barcodeEditText"
+                    style="@style/FormEditText"
+                    android:drawableStart="@drawable/ic_barcode_logo_black"
+                    android:drawablePadding="12dp"
+                    android:enabled="false"
+                    android:hint="Barcode" />
+
+                <!-- Country Dropdown -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:text="Country"
+                    android:textColor="@color/white"
+                    android:textSize="12sp" />
+                <Spinner
+                    android:id="@+id/countrySpinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/edittext_background"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp" />
+
+                <!-- Product Name with Search Button -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:orientation="horizontal">
+
+                    <EditText
+                        android:id="@+id/productNameEditText"
+                        style="@style/FormEditText.NoMargin"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:hint="Product Name" />
+
+                    <ImageButton
+                        android:id="@+id/searchButton"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/edittext_background"
+                        android:src="@drawable/ic_search"
+                        app:tint="#F8C545"
+                        android:contentDescription="Search for product details online" />
+                </LinearLayout>
+
+                <!-- Other Fields -->
+                <EditText android:id="@+id/brandEditText" style="@style/FormEditText" android:hint="Brand" />
+                <EditText android:id="@+id/categoryEditText" style="@style/FormEditText" android:hint="Category" />
+
+                <!-- Currency and Price -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <EditText
+                        android:id="@+id/currencyEditText"
+                        style="@style/FormEditText.NoMargin"
+                        android:layout_width="0dp"
+                        android:layout_weight="0.4"
+                        android:hint="Currency" />
+
+                    <EditText
+                        android:id="@+id/priceEditText"
+                        style="@style/FormEditText.NoMargin"
+                        android:layout_width="0dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="0.6"
+                        android:hint="Price"
+                        android:inputType="numberDecimal" />
+                </LinearLayout>
+
+
+                <EditText android:id="@+id/ingredientsEditText" style="@style/FormEditText" android:hint="Ingredients" android:layout_width="match_parent"
+                    android:layout_height="120dp"
+                    android:gravity="top|start"
+                    android:inputType="textMultiLine"
+                    android:scrollbars="vertical"
+                    android:scrollHorizontally="false"
+                    android:ellipsize="none"
+                    android:padding="12dp"
+                    android:background="@drawable/rounded_edittext"
+                    android:overScrollMode="always" />
+                <EditText android:id="@+id/healthBenefitsEditText" style="@style/FormEditText" android:hint="Health Benefits" android:layout_width="match_parent"
+                    android:layout_height="120dp"
+                    android:gravity="top|start"
+                    android:inputType="textMultiLine"
+                    android:scrollbars="vertical"
+                    android:scrollHorizontally="false"
+                    android:ellipsize="none"
+                    android:padding="12dp"
+                    android:background="@drawable/rounded_edittext"
+                    android:overScrollMode="always"/>
+                <EditText android:id="@+id/specificationsEditText" style="@style/FormEditText" android:hint="Specifications" android:layout_width="match_parent"
+                    android:layout_height="120dp"
+                    android:gravity="top|start"
+                    android:inputType="textMultiLine"
+                    android:scrollbars="vertical"
+                    android:scrollHorizontally="false"
+                    android:ellipsize="none"
+                    android:padding="12dp"
+                    android:background="@drawable/rounded_edittext"
+                    android:overScrollMode="always"/>
+                <EditText android:id="@+id/manufacturedInEditText" style="@style/FormEditText" android:hint="Manufactured In"  />
+                <EditText android:id="@+id/availableStoresEditText" style="@style/FormEditText" android:hint="Available Stores" />
+
+                <!-- Description Field -->
+                <EditText
+                    android:id="@+id/descriptionEditText"
+                    style="@style/FormEditText"
+                    android:hint="Description"
+                    android:layout_width="match_parent"
+                    android:layout_height="120dp"
+                    android:gravity="top|start"
+                    android:inputType="textMultiLine"
+                    android:scrollbars="vertical"
+                    android:scrollHorizontally="false"
+                    android:ellipsize="none"
+                    android:padding="12dp"
+                    android:background="@drawable/rounded_edittext"
+                    android:overScrollMode="always" />
+
+                <!-- Is Edible Switch -->
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/isEdibleSwitch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:paddingStart="4dp"
+                    android:text="Is this product edible?"
+                    android:textColor="@color/white"
+                    android:textSize="16sp" />
+
+            </LinearLayout>
+
+
+            <!-- Buttons -->
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/addProductButton"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/button_background_gradient"
+                android:text="Upload Product"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/cancelButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="16dp"
+                android:text="Cancel"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

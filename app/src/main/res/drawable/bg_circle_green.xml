@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval"> <!-- "oval" creates a circle if width and height are equal -->
+
+    <solid
+        android:color="#4CAF50" /> <!-- A common Material Design green (Green 500) -->
+    <!-- You can replace this with your specific green hex code
+         or a color resource e.g., @color/your_app_green -->
+
+    <!-- Optional: Add a size if you want this drawable to have an intrinsic size -->
+    <!--
+    <size
+        android:width="48dp"
+        android:height="48dp" />
+    -->
+
+    <!-- Optional: Add a stroke (border) if you need one -->
+    <!--
+    <stroke
+        android:width="2dp"
+        android:color="#388E3C" /> // Darker green for border, for example
+    -->
+
+</shape>

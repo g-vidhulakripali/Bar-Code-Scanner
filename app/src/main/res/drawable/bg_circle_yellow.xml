@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval"> <!-- "oval" will create a circle if width and height are equal -->
+
+    <solid
+        android:color="#FFEB3B" /> <!-- A common bright yellow color (Material Yellow A400) -->
+    <!-- You can replace this with your specific yellow hex code
+         or a color resource e.g., @color/your_app_yellow -->
+
+    <!-- Optional: Add a size if you want this drawable to have an intrinsic size,
+                   though usually the View's layout_width/layout_height will define the actual size. -->
+    <!--
+    <size
+        android:width="48dp"
+        android:height="48dp" />
+    -->
+
+    <!-- Optional: Add a stroke (border) if you need one -->
+    <!--
+    <stroke
+        android:width="2dp"
+        android:color="#000000" />
+    -->
+
+</shape>

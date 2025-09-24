@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The underline for the selected tab -->
+    <item
+        android:gravity="bottom"> <!-- Positions the underline at the bottom -->
+        <shape android:shape="rectangle">
+            <size android:height="4dp" /> <!-- Height of the underline -->
+            <solid android:color="?attr/colorPrimary" /> <!-- Color of the underline (uses theme's primary color) -->
+            <!-- Or use a specific color: "#FFC107" -->
+        </shape>
+    </item>
+
+</layer-list>

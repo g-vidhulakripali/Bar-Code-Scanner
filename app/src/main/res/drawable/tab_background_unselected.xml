@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!-- For an unselected tab, you often want it to be transparent
+         so it blends with the TabLayout's background. -->
+    <solid android:color="@android:color/transparent" />
+
+    <!-- Optional: If you want a very subtle background color for unselected tabs -->
+    <!-- <solid android:color="#1A000000" /> --> <!-- Very subtle dark tint -->
+
+    <!-- Optional: If you want a very thin, light grey underline for unselected tabs -->
+    <!-- <stroke
+        android:width="1dp"
+        android:color="#E0E0E0" /> -->
+</shape>

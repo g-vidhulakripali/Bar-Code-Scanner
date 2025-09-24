@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- App Theme Colors based on your design -->
+    <color name="app_background">#F5F5F5</color>
+    <color name="app_yellow">#FFD140</color>
+    <color name="app_dark_grey">#333333</color>
+    <color name="app_light_grey">#A0A0A0</color>
+    <color name="app_card_background">#FFF8E1</color>
+
+    <!-- Your provided colors -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="button_yellow">#F4C542</color>
+    <color name="text_primary_dark">#333333</color>
+    <color name="text_secondary_light">#555555</color>
+    <color name="yellow_gradient_start">#FFD60A</color>
+    <color name="yellow_gradient_end">#FFC107</color>
+    <color name="off_white">#DBCBAC</color>
+    <color name="scanner_viewfinder_border">#FFFFFF</color>
+    <color name="scanner_laser_color">#FF4081</color>
+
+    <color name="design_default_color_secondary_variant">#4CAF50</color>
+    <color name="design_default_color_error">#F44336</color>
+</resources>
