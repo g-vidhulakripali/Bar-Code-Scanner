@@ -4,15 +4,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/gradient_yellow_background"
+    android:background="@android:color/white"
     android:padding="16dp"
     tools:context=".ProductDetailActivity">
 
-    <!-- Glassy Container -->
+    <!-- Glassy Yellow Container -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/glass_background_dark"
+        android:background="@drawable/glass_background_yellow_gradient"
         android:padding="20dp">
 
         <!-- Product Image -->
@@ -36,11 +36,12 @@
             android:layout_marginTop="8dp"
             android:fontFamily="sans-serif"
             android:gravity="center"
-            android:textColor="#373737"
+            android:textColor="#8A5C1A"
             android:textSize="12sp"
             app:layout_constraintEnd_toEndOf="@id/productImageView"
             app:layout_constraintStart_toStartOf="@id/productImageView"
             app:layout_constraintTop_toBottomOf="@id/productImageView"
+            app:drawableStartCompat="@drawable/ic_barcode_logo"
             tools:text="044000060114" />
 
         <!-- Category -->
@@ -50,7 +51,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:fontFamily="sans-serif-medium"
-            android:textColor="#D0A22A"
+            android:textColor="#9C6711"
             android:textSize="14sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
@@ -65,7 +66,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:fontFamily="sans-serif-black"
-            android:textColor="#9C6711"
+            android:textColor="#FFFFFF"
             android:textSize="22sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
@@ -80,7 +81,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:fontFamily="sans-serif"
-            android:textColor="#C09022"
+            android:textColor="#FFFFFF"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="@id/categoryTextView"
@@ -93,7 +94,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:background="@drawable/glass_background_faded"
+            android:background="@drawable/glass_background_faded_yellow"
             android:orientation="horizontal"
             android:padding="12dp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -114,7 +115,7 @@
                     android:drawablePadding="8dp"
                     android:fontFamily="sans-serif-medium"
                     android:gravity="center"
-                    android:textColor="#8A5C1A"
+                    android:textColor="#FFFFFF"
                     android:textSize="15sp"
                     tools:drawableStartCompat="@drawable/dot_green"
                     tools:text="Edible" />
@@ -127,7 +128,7 @@
                     android:drawablePadding="8dp"
                     android:fontFamily="sans-serif-medium"
                     android:gravity="center"
-                    android:textColor="#D78F1A"
+                    android:textColor="#FFFFFF"
                     android:textSize="15sp"
                     app:drawableStartCompat="@drawable/ic_manufactured"
                     tools:text="Manufactured in United States" />
@@ -140,7 +141,7 @@
                     android:drawablePadding="8dp"
                     android:fontFamily="sans-serif-medium"
                     android:gravity="center"
-                    android:textColor="#9C6711"
+                    android:textColor="#FFFFFF"
                     android:textSize="15sp"
                     android:visibility="gone"
                     app:drawableStartCompat="@drawable/ic_location"
@@ -155,7 +156,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:fontFamily="sans-serif-black"
-                android:textColor="#9D6811"
+                android:textColor="#B2000000"
                 android:textSize="28sp"
                 android:textStyle="bold"
                 tools:text="$5.39" />
@@ -179,7 +180,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-black"
                 android:text="Description"
-                android:textColor="#9C6711"
+                android:textColor="#B3684410"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -189,11 +190,11 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:lineSpacingExtra="4dp"
-                android:textColor="#090808"
+                android:textColor="#FFFFFF"
+                android:justificationMode="inter_word"
                 android:textSize="15sp"
-                tools:text="OREO Original Chocolate Sandwich Cookies are America's favorite sandwich cookie." />
+                tools:text="OREO Original Chocolate Sandwich Cookies are America's favorite sandwich cookie, featuring two rich, dark chocolate-flavored wafers with a sweet, creamy vanilla-flavored filling in between." />
         </LinearLayout>
-
 
         <!-- Ingredients Section -->
         <LinearLayout
@@ -213,7 +214,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-black"
                 android:text="Ingredients"
-                android:textColor="#9B6611"
+                android:textColor="#B3684410"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -222,9 +223,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:textColor="#000000"
+                android:textColor="#FFFFFF"
+                android:justificationMode="inter_word"
                 android:textSize="15sp"
-                tools:text="UNBLEACHED ENRICHED FLOUR, SUGAR, PALM AND/OR CANOLA OIL, COCOA" />
+                tools:text="UNBLEACHED ENRICHED FLOUR, SUGAR, PALM AND/OR CANOLA OIL, COCOA, HIGH FRUCTOSE CORN SYRUP" />
         </LinearLayout>
 
         <!-- Availability Section -->
@@ -245,7 +247,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-black"
                 android:text="Available At"
-                android:textColor="#9C6711"
+                android:textColor="#B6684410"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -254,7 +256,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:textColor="#000000"
+                android:textColor="#FFFFFF"
+                android:justificationMode="inter_word"
                 android:textSize="15sp"
                 tools:text="Walmart, Target, Brookshire's, Super 1 Foods" />
         </LinearLayout>
@@ -277,7 +280,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-black"
                 android:text="Specifications"
-                android:textColor="#9C6711"
+                android:textColor="#B2684410"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -287,16 +290,17 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:lineSpacingExtra="4dp"
-                android:textColor="#000000"
+                android:textColor="#FFFFFF"
+                android:justificationMode="inter_word"
                 android:textSize="15sp"
-                tools:text="• Net Weight: 13.29 oz (376g)\n• Serving Size: 3 cookies (34g)" />
+                tools:text="• Net Weight: 13.29 oz (376g)\n• Serving Size: 3 cookies (34g)\n• Calories per serving: 160" />
         </LinearLayout>
 
         <ProgressBar
             android:id="@+id/progressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:indeterminateTint="@android:color/white"
+            android:indeterminateTint="#FFFFFF"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

@@ -4,12 +4,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/login_background_gradient"
+    android:background="@drawable/white_card_background"
+    android:padding="7dp"
     tools:context=".AddProductActivity">
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="@drawable/glass_background_yellow_gradient"
+        android:padding="20dp">
 
         <LinearLayout
             android:layout_width="match_parent"

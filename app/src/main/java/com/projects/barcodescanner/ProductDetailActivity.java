@@ -195,8 +195,8 @@ public class ProductDetailActivity extends AppCompatActivity {
 
         // --- Populate Info Box ---
         setupEdibleStatus(product.isEdible());
-        String manufacturedText = "Manufactured in " + product.getManufacturedIn();
-        countryFlagTextView.setText(String.format("%s %s", getFlagEmoji(product.getManufacturedIn()), manufacturedText));
+        String manufacturedText = "Manufactured: " + product.getManufacturedIn();
+        countryFlagTextView.setText(manufacturedText);
         populateInfoLine(bestSuitedTextView, product.getLocation(), "Best suited for: ");
 
         // --- Populate Collapsible Sections ---
