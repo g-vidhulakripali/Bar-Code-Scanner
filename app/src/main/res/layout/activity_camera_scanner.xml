@@ -23,20 +23,20 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Layer 3: All your UI controls (sit on top of the overlay) -->
-    <ImageButton
-        android:id="@+id/searchButton"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="48dp"
-        android:background="@drawable/circular_background"
-        android:padding="12dp"
-        android:scaleType="centerInside"
-        android:src="@android:drawable/ic_menu_search"
-        android:contentDescription="Search"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="@android:color/black" />
+<!--    <ImageButton-->
+<!--        android:id="@+id/searchButton"-->
+<!--        android:layout_width="48dp"-->
+<!--        android:layout_height="48dp"-->
+<!--        android:layout_marginStart="16dp"-->
+<!--        android:layout_marginTop="48dp"-->
+<!--        android:background="@drawable/circular_background"-->
+<!--        android:padding="12dp"-->
+<!--        android:scaleType="centerInside"-->
+<!--        android:src="@android:drawable/ic_menu_search"-->
+<!--        android:contentDescription="Search"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent"-->
+<!--        app:tint="@android:color/black" />-->
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/closeButton"
@@ -86,18 +86,18 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/zoomButton"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="1x"
-            android:textColor="@android:color/white"
-            app:cornerRadius="24dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:strokeColor="@android:color/white" />
+<!--        <com.google.android.material.button.MaterialButton-->
+<!--            android:id="@+id/zoomButton"-->
+<!--            style="@style/Widget.MaterialComponents.Button.OutlinedButton"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="1x"-->
+<!--            android:textColor="@android:color/white"-->
+<!--            app:cornerRadius="24dp"-->
+<!--            app:layout_constraintBottom_toBottomOf="parent"-->
+<!--            app:layout_constraintStart_toStartOf="parent"-->
+<!--            app:layout_constraintTop_toTopOf="parent"-->
+<!--            app:strokeColor="@android:color/white" />-->
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
