@@ -1,6 +1,7 @@
 package com.projects.barcodescanner.adapter;
 
 import android.content.Context;
+import android.content.Intent; // <-- Import the Intent class
 import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,8 +15,9 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.zxing.BarcodeFormat; // Import ZXing class
-import com.journeyapps.barcodescanner.BarcodeEncoder; // Import BarcodeEncoder
+import com.google.zxing.BarcodeFormat;
+import com.journeyapps.barcodescanner.BarcodeEncoder;
+import com.projects.barcodescanner.ProductDetailActivity; // <-- Import your new Activity
 import com.projects.barcodescanner.R;
 import com.projects.barcodescanner.model.Product;
 import com.squareup.picasso.Picasso;
@@ -26,6 +28,7 @@ import java.util.List;
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHolder> {
 
     private List<Product> productList = new ArrayList<>();
+    private static final int ITEM_COUNT = 1000; // Use a large but reasonable number
 
     @NonNull
     @Override
@@ -45,7 +48,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
 
     @Override
     public int getItemCount() {
-        return productList.isEmpty() ? 0 : 1000;
+        return productList.isEmpty() ? 0 : ITEM_COUNT;
     }
 
     public void setProducts(List<Product> products) {
@@ -61,7 +64,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         private ImageView productImageView;
         private TextView productNameTextView;
         private TextView barcodeNumberTextView;
-        private ImageView barcodeImageView; // The ImageView for the barcode
+        private ImageView barcodeImageView;
         private View edibleStatusDot;
         private TextView edibleStatusTextView;
         private Button viewMoreButton;
@@ -71,7 +74,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
             productImageView = itemView.findViewById(R.id.productImageView);
             productNameTextView = itemView.findViewById(R.id.productNameTextView);
             barcodeNumberTextView = itemView.findViewById(R.id.barcodeNumberTextView);
-            barcodeImageView = itemView.findViewById(R.id.barcodeImageView); // Initialize the barcode ImageView
+            barcodeImageView = itemView.findViewById(R.id.barcodeImageView);
             edibleStatusDot = itemView.findViewById(R.id.edibleStatusDot);
             edibleStatusTextView = itemView.findViewById(R.id.edibleStatusTextView);
             viewMoreButton = itemView.findViewById(R.id.viewMoreButton);
@@ -80,19 +83,15 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         public void bind(Product product) {
             Context context = itemView.getContext();
 
-            // Bind product name and barcode number
-//            productNameTextView.setText(product.getProductName().replace(" ", "\n"));
             productNameTextView.setText(product.getProductName());
             barcodeNumberTextView.setText(product.getBarcode());
 
-            // Load product image using Picasso
             if (product.getImageUrl() != null && !product.getImageUrl().isEmpty()) {
                 Picasso.get().load(product.getImageUrl()).into(productImageView);
             } else {
                 productImageView.setImageResource(R.drawable.product_default);
             }
 
-            // Set edible status indicator
             if (product.isEdible()) {
                 edibleStatusDot.setBackgroundResource(R.drawable.bg_circle_green);
                 edibleStatusTextView.setText("EDIBLE");
@@ -103,12 +102,8 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                 edibleStatusTextView.setTextColor(ContextCompat.getColor(context, R.color.design_default_color_error));
             }
 
-            // --- BARCODE GENERATION LOGIC ---
             try {
                 BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
-                // CODE_128 is a common format that looks like your example.
-                // You can also use other formats like UPC_A or EAN_13 if they fit your data.
-                // The dimensions (e.g., 600x150) can be adjusted to fit your layout.
                 Bitmap bitmap = barcodeEncoder.encodeBitmap(
                         product.getBarcode(),
                         BarcodeFormat.CODE_128,
@@ -118,13 +113,13 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                 barcodeImageView.setImageBitmap(bitmap);
             } catch (Exception e) {
                 e.printStackTrace();
-                // Optionally, hide the ImageView or set a placeholder if generation fails
                 barcodeImageView.setVisibility(View.GONE);
             }
 
-
             viewMoreButton.setOnClickListener(v -> {
-                Toast.makeText(context, "Viewing more about " + product.getProductName(), Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(context, ProductDetailActivity.class);
+                intent.putExtra("PRODUCT_BARCODE", product.getBarcode());
+                context.startActivity(intent);
             });
         }
     }

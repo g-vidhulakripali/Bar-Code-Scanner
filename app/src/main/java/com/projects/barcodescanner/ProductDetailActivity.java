@@ -12,6 +12,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -37,12 +38,13 @@ public class ProductDetailActivity extends AppCompatActivity {
 
     private static final String TAG = "ProductDetailActivity";
 
+    // UI Views
     private ImageView productImageView;
-    private TextView productNameTextView, brandTextView, priceTextView, availabilityTextView, countryFlagTextView;
-//    private Button updateButton;
+    private TextView productNameTextView, brandTextView, priceTextView, countryFlagTextView,
+            barcodeTextView, categoryTextView, edibleStatusTextView, descriptionTextView,
+            ingredientsTextView, availabilityTextView, specificationsTextView, bestSuitedTextView;
     private ProgressBar progressBar;
-
-    private View descriptionCard, healthBenefitsCard, additionalDetailsCard;
+    private LinearLayout descriptionSection, ingredientsSection, availabilitySection, specificationsSection;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,11 +53,7 @@ public class ProductDetailActivity extends AppCompatActivity {
 
         initializeViews();
 
-//        updateButton.setOnClickListener(v -> Toast.makeText(this, "Update Clicked!", Toast.LENGTH_SHORT).show());
-
         String barcode = getIntent().getStringExtra("PRODUCT_BARCODE");
-        Log.d(TAG, "onCreate: Received barcode from Intent: " + barcode);
-
         if (barcode != null && !barcode.isEmpty()) {
             fetchProductDetails(barcode);
         } else {
@@ -69,57 +67,54 @@ public class ProductDetailActivity extends AppCompatActivity {
         productNameTextView = findViewById(R.id.productNameTextView);
         brandTextView = findViewById(R.id.brandTextView);
         priceTextView = findViewById(R.id.priceTextView);
-        availabilityTextView = findViewById(R.id.availabilityTextView);
         countryFlagTextView = findViewById(R.id.countryFlagTextView);
-//        updateButton = findViewById(R.id.updateButton);
+        barcodeTextView = findViewById(R.id.barcodeTextView);
+        categoryTextView = findViewById(R.id.categoryTextView);
+        edibleStatusTextView = findViewById(R.id.edibleStatusTextView);
+        descriptionTextView = findViewById(R.id.descriptionTextView);
+        ingredientsTextView = findViewById(R.id.ingredientsTextView);
+        availabilityTextView = findViewById(R.id.availabilityTextView);
+        specificationsTextView = findViewById(R.id.specificationsTextView);
+        bestSuitedTextView = findViewById(R.id.bestSuitedTextView);
+
+        // Section Layouts
+        descriptionSection = findViewById(R.id.descriptionSection);
+        ingredientsSection = findViewById(R.id.ingredientsSection);
+        availabilitySection = findViewById(R.id.availabilitySection);
+        specificationsSection = findViewById(R.id.specificationsSection);
+
         progressBar = findViewById(R.id.progressBar);
-        descriptionCard = findViewById(R.id.descriptionCard);
-        healthBenefitsCard = findViewById(R.id.healthBenefitsCard);
-        additionalDetailsCard = findViewById(R.id.additionalDetailsCard);
     }
 
     private void fetchProductDetails(String barcode) {
-        Log.d(TAG, "fetchProductDetails: Fetching details for barcode: " + barcode);
         progressBar.setVisibility(View.VISIBLE);
-
         SupabaseService.getProductByBarcode(barcode, new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                Log.e(TAG, "onFailure: Failed to fetch product details from Supabase.", e);
-                runOnUiThread(() -> {
-                    progressBar.setVisibility(View.GONE);
-                    Toast.makeText(ProductDetailActivity.this, "Network Error: Failed to load details.", Toast.LENGTH_SHORT).show();
-                });
+                Log.e(TAG, "onFailure: Failed to fetch product details.", e);
+                handleNetworkError();
             }
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                Log.d(TAG, "onResponse: Received response with code: " + response.code());
-
-                if (response.isSuccessful() && response.body() != null) {
-                    final String responseBody = response.body().string();
-                    Log.d(TAG, "onResponse: Raw JSON from Supabase: " + responseBody);
-
+                final String responseBody = response.body().string();
+                if (response.isSuccessful()) {
                     try {
                         JsonArray jsonArray = JsonParser.parseString(responseBody).getAsJsonArray();
                         if (jsonArray.size() > 0) {
-                            Log.d(TAG, "onResponse: Product found in JSON. Parsing...");
                             JsonObject productObject = jsonArray.get(0).getAsJsonObject();
                             final Product product = parseProduct(productObject);
                             runOnUiThread(() -> populateUi(product));
                         } else {
-                            Log.w(TAG, "onResponse: JSON array is empty. Product not found by Supabase for this query.");
-                            runOnUiThread(() -> {
-                                progressBar.setVisibility(View.GONE);
-                                Toast.makeText(ProductDetailActivity.this, "Product data not found in database.", Toast.LENGTH_LONG).show();
-                            });
+                            handleProductNotFound();
                         }
                     } catch (Exception e) {
                         Log.e(TAG, "onResponse: Error parsing product JSON", e);
-                        runOnUiThread(() -> Toast.makeText(ProductDetailActivity.this, "Error reading product data.", Toast.LENGTH_SHORT).show());
+                        handleDataError();
                     }
                 } else {
-                    Log.e(TAG, "onResponse: API call was not successful. Code: " + response.code());
+                    Log.e(TAG, "onResponse: API call failed. Code: " + response.code());
+                    handleDataError();
                 }
             }
         });
@@ -185,57 +180,52 @@ public class ProductDetailActivity extends AppCompatActivity {
 
 
     private void populateUi(Product product) {
-        Log.d(TAG, "populateUi: Populating UI with product: " + product.getProductName());
         progressBar.setVisibility(View.GONE);
-//        updateButton.setVisibility(View.VISIBLE);
 
+        // --- Populate Main Info ---
         productNameTextView.setText(product.getProductName());
-        brandTextView.setText("by " + product.getBrand());
-        priceTextView.setText(product.getCurrency() + " " + product.getPrice()); // Added space for better formatting
-        countryFlagTextView.setText(getFlagEmoji(product.getManufacturedIn()));
+        brandTextView.setText(product.getBrand());
+        barcodeTextView.setText(product.getBarcode());
+        categoryTextView.setText(product.getCategory());
+        priceTextView.setText(String.format("%s%s", product.getCurrency(), product.getPrice()));
 
         if (product.getImageUrl() != null && !product.getImageUrl().isEmpty()) {
-            Picasso.get().load(product.getImageUrl()).placeholder(R.drawable.no_product).into(productImageView);
+            Picasso.get().load(product.getImageUrl()).placeholder(R.drawable.product_default).into(productImageView);
         }
 
-        setupExpandableCard(descriptionCard, "Description", product.getDescription());
-        setupExpandableCard(healthBenefitsCard, "Health Benefits", formatList(product.getHealthBenefits()));
-        String additionalDetails = "SPECIFICATIONS:\n" + formatList(product.getSpecifications()) +
-                "\n\nINGREDIENTS:\n" + formatList(product.getIngredients());
-        setupExpandableCard(additionalDetailsCard, "Additional Details", additionalDetails);
+        // --- Populate Info Box ---
+        setupEdibleStatus(product.isEdible());
+        String manufacturedText = "Manufactured in " + product.getManufacturedIn();
+        countryFlagTextView.setText(String.format("%s %s", getFlagEmoji(product.getManufacturedIn()), manufacturedText));
+        populateInfoLine(bestSuitedTextView, product.getLocation(), "Best suited for: ");
 
-        if (product.getAvailableStores() != null && !product.getAvailableStores().isEmpty()) {
-            availabilityTextView.setText("Available at: " + String.join(", ", product.getAvailableStores()));
-            availabilityTextView.setVisibility(View.VISIBLE);
+        // --- Populate Collapsible Sections ---
+        populateSection(descriptionSection, descriptionTextView, product.getDescription());
+        populateSection(ingredientsSection, ingredientsTextView, formatList(product.getIngredients()));
+        populateSection(availabilitySection, availabilityTextView, formatList(product.getAvailableStores()));
+        populateSection(specificationsSection, specificationsTextView, formatList(product.getSpecifications()));
+    }
+
+    private void setupEdibleStatus(boolean isEdible) {
+        if (isEdible) {
+            edibleStatusTextView.setText("Edible");
+            edibleStatusTextView.setCompoundDrawablesWithIntrinsicBounds(
+                    ContextCompat.getDrawable(this, R.drawable.dot_green), null, null, null);
         } else {
-            availabilityTextView.setVisibility(View.GONE);
+            edibleStatusTextView.setText("Not Edible");
+            edibleStatusTextView.setCompoundDrawablesWithIntrinsicBounds(
+                    ContextCompat.getDrawable(this, R.drawable.dot_red), null, null, null);
         }
     }
 
-    private void setupExpandableCard(View cardView, String title, String content) {
-        TextView titleView = cardView.findViewById(R.id.cardTitleTextView);
-        TextView contentView = cardView.findViewById(R.id.cardContentTextView);
-        ImageView arrowView = cardView.findViewById(R.id.arrowImageView);
-        LinearLayout header = cardView.findViewById(R.id.headerLayout);
-
-        // Hide the entire card if content is not available
-        if (content == null || content.isEmpty() || content.equals("N/A")) {
-            cardView.setVisibility(View.GONE);
-            return;
+    private void populateInfoLine(TextView textView, String data, String prefix) {
+        if (data != null && !data.isEmpty()) {
+            textView.setText(prefix + data);
+            textView.setVisibility(View.VISIBLE);
         } else {
-            cardView.setVisibility(View.VISIBLE);
+            textView.setVisibility(View.GONE);
         }
-
-        titleView.setText(title);
-        contentView.setText(content);
-
-        header.setOnClickListener(v -> {
-            boolean isVisible = contentView.getVisibility() == View.VISIBLE;
-            contentView.setVisibility(isVisible ? View.GONE : View.VISIBLE);
-            arrowView.animate().rotation(isVisible ? 0 : 180).setDuration(300).start();
-        });
     }
-
     private String formatList(List<String> list) {
         if (list == null || list.isEmpty()) return "N/A";
         StringBuilder sb = new StringBuilder();
@@ -243,6 +233,15 @@ public class ProductDetailActivity extends AppCompatActivity {
             sb.append("• ").append(item).append("\n");
         }
         return sb.toString().trim();
+    }
+
+    private void populateSection(View sectionView, TextView textView, String content) {
+        if (content != null && !content.isEmpty()) {
+            textView.setText(content);
+            sectionView.setVisibility(View.VISIBLE);
+        } else {
+            sectionView.setVisibility(View.GONE);
+        }
     }
 
     private String getFlagEmoji(String countryName) {
@@ -254,5 +253,26 @@ public class ProductDetailActivity extends AppCompatActivity {
             case "germany": return "🇩🇪";
             default: return "🏳️";
         }
+    }
+
+    private void handleNetworkError() {
+        runOnUiThread(() -> {
+            progressBar.setVisibility(View.GONE);
+            Toast.makeText(ProductDetailActivity.this, "Network Error: Failed to load details.", Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void handleProductNotFound() {
+        runOnUiThread(() -> {
+            progressBar.setVisibility(View.GONE);
+            Toast.makeText(ProductDetailActivity.this, "Product data not found in database.", Toast.LENGTH_LONG).show();
+        });
+    }
+
+    private void handleDataError() {
+        runOnUiThread(() -> {
+            progressBar.setVisibility(View.GONE);
+            Toast.makeText(ProductDetailActivity.this, "Error reading product data.", Toast.LENGTH_SHORT).show();
+        });
     }
 }

@@ -4,131 +4,305 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/login_background_gradient"
-    android:clipToPadding="false"
+    android:background="@drawable/gradient_yellow_background"
     android:padding="16dp"
     tools:context=".ProductDetailActivity">
 
-    <LinearLayout
+    <!-- Glassy Container -->
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:background="@drawable/glass_background_dark"
+        android:padding="20dp">
 
-        <!-- Card 1: Main Product Info -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+        <!-- Product Image -->
+        <ImageView
+            android:id="@+id/productImageView"
+            android:layout_width="140dp"
+            android:layout_height="140dp"
             android:background="@drawable/white_card_background"
-            android:orientation="vertical"
-            android:padding="20dp">
+            android:elevation="4dp"
+            android:padding="8dp"
+            android:scaleType="centerInside"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:src="@drawable/product_default" />
 
-            <FrameLayout
-                android:layout_width="match_parent"
+        <!-- Barcode below image -->
+        <TextView
+            android:id="@+id/barcodeTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="sans-serif"
+            android:gravity="center"
+            android:textColor="#373737"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toEndOf="@id/productImageView"
+            app:layout_constraintStart_toStartOf="@id/productImageView"
+            app:layout_constraintTop_toBottomOf="@id/productImageView"
+            tools:text="044000060114" />
+
+        <!-- Category -->
+        <TextView
+            android:id="@+id/categoryTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="#D0A22A"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/productImageView"
+            app:layout_constraintTop_toTopOf="@id/productImageView"
+            tools:text="SANDWICH COOKIE" />
+
+        <!-- Product Name -->
+        <TextView
+            android:id="@+id/productNameTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:fontFamily="sans-serif-black"
+            android:textColor="#9C6711"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/categoryTextView"
+            app:layout_constraintTop_toBottomOf="@id/categoryTextView"
+            tools:text="OREO Original Chocolate Sandwich Cookies" />
+
+        <!-- Brand -->
+        <TextView
+            android:id="@+id/brandTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:fontFamily="sans-serif"
+            android:textColor="#C09022"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/categoryTextView"
+            app:layout_constraintTop_toBottomOf="@id/productNameTextView"
+            tools:text="Oreo" />
+
+        <!-- Info Box -->
+        <LinearLayout
+            android:id="@+id/infoBox"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/glass_background_faded"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/barcodeTextView">
+
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp">
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/edibleStatusTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:drawablePadding="8dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:gravity="center"
+                    android:textColor="#8A5C1A"
+                    android:textSize="15sp"
+                    tools:drawableStartCompat="@drawable/dot_green"
+                    tools:text="Edible" />
 
                 <TextView
                     android:id="@+id/countryFlagTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="top|end"
-                    android:textSize="32sp"
-                    tools:text="🇮🇳" />
-            </FrameLayout>
+                    android:layout_marginTop="8dp"
+                    android:drawablePadding="8dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:gravity="center"
+                    android:textColor="#D78F1A"
+                    android:textSize="15sp"
+                    app:drawableStartCompat="@drawable/ic_manufactured"
+                    tools:text="Manufactured in United States" />
 
-            <ImageView
-                android:id="@+id/productImageView"
-                android:layout_width="180dp"
-                android:layout_height="180dp"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="-32dp"
-                android:scaleType="centerInside"
-                tools:src="@drawable/product_default" />
+                <TextView
+                    android:id="@+id/bestSuitedTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:drawablePadding="8dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:gravity="center"
+                    android:textColor="#9C6711"
+                    android:textSize="15sp"
+                    android:visibility="gone"
+                    app:drawableStartCompat="@drawable/ic_location"
+                    tools:text="Best suited for: USA"
+                    tools:visibility="visible"/>
 
-            <TextView
-                android:id="@+id/productNameTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="16dp"
-                android:textAlignment="center"
-                android:textColor="@color/text_primary_dark"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                tools:text="Pond's Dreamflower Fragrant Talc" />
-
-            <TextView
-                android:id="@+id/brandTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="4dp"
-                android:textColor="@color/text_secondary_light"
-                android:textSize="18sp"
-                tools:text="by Pond's" />
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/priceTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="8dp"
-                android:textColor="@color/text_primary_dark"
-                android:textSize="22sp"
+                android:layout_gravity="center_vertical"
+                android:fontFamily="sans-serif-black"
+                android:textColor="#9D6811"
+                android:textSize="28sp"
                 android:textStyle="bold"
-                tools:text="₹10.0" />
+                tools:text="$5.39" />
+        </LinearLayout>
+
+        <!-- Description Section -->
+        <LinearLayout
+            android:id="@+id/descriptionSection"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/infoBox"
+            tools:visibility="visible">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-black"
+                android:text="Description"
+                android:textColor="#9C6711"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/descriptionTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:lineSpacingExtra="4dp"
+                android:textColor="#090808"
+                android:textSize="15sp"
+                tools:text="OREO Original Chocolate Sandwich Cookies are America's favorite sandwich cookie." />
+        </LinearLayout>
+
+
+        <!-- Ingredients Section -->
+        <LinearLayout
+            android:id="@+id/ingredientsSection"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/descriptionSection"
+            tools:visibility="visible">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-black"
+                android:text="Ingredients"
+                android:textColor="#9B6611"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/ingredientsTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="#000000"
+                android:textSize="15sp"
+                tools:text="UNBLEACHED ENRICHED FLOUR, SUGAR, PALM AND/OR CANOLA OIL, COCOA" />
+        </LinearLayout>
+
+        <!-- Availability Section -->
+        <LinearLayout
+            android:id="@+id/availabilitySection"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/ingredientsSection"
+            tools:visibility="visible">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-black"
+                android:text="Available At"
+                android:textColor="#9C6711"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/availabilityTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="12dp"
-                android:drawablePadding="8dp"
-                android:gravity="center"
-                android:textColor="@color/text_secondary_light"
-                android:textSize="14sp"
-                tools:text="Available at: Amazon, Flipkart, Nykaa"
-                app:drawableStartCompat="@drawable/ic_search"
-                app:drawableTint="@color/text_secondary_light"/>
+                android:layout_marginTop="8dp"
+                android:textColor="#000000"
+                android:textSize="15sp"
+                tools:text="Walmart, Target, Brookshire's, Super 1 Foods" />
         </LinearLayout>
 
-        <!-- The <include> tags are now placed directly in the main layout,
-             and the reusable card layout will provide its own background and margin. -->
-        <include
-            android:id="@+id/descriptionCard"
-            layout="@layout/layout_expandable_card" />
+        <!-- Specifications Section -->
+        <LinearLayout
+            android:id="@+id/specificationsSection"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/availabilitySection"
+            tools:visibility="visible">
 
-        <include
-            android:id="@+id/healthBenefitsCard"
-            layout="@layout/layout_expandable_card" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-black"
+                android:text="Specifications"
+                android:textColor="#9C6711"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
-        <include
-            android:id="@+id/additionalDetailsCard"
-            layout="@layout/layout_expandable_card" />
+            <TextView
+                android:id="@+id/specificationsTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:lineSpacingExtra="4dp"
+                android:textColor="#000000"
+                android:textSize="15sp"
+                tools:text="• Net Weight: 13.29 oz (376g)\n• Serving Size: 3 cookies (34g)" />
+        </LinearLayout>
 
         <ProgressBar
             android:id="@+id/progressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="32dp"
-            android:indeterminateTint="@color/text_primary_dark"
+            android:indeterminateTint="@android:color/white"
             android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             tools:visibility="visible" />
 
-<!--        <androidx.appcompat.widget.AppCompatButton-->
-<!--            android:id="@+id/updateButton"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="50dp"-->
-<!--            android:layout_marginTop="16dp"-->
-<!--            android:background="@drawable/button_background_gradient"-->
-<!--            android:text="Update"-->
-<!--            android:textColor="@android:color/white"-->
-<!--            android:textSize="18sp"-->
-<!--            android:textStyle="bold"-->
-<!--            android:visibility="gone"-->
-<!--            tools:visibility="visible" />-->
-
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>
