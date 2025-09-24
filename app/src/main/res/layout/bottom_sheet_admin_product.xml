@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bottom_sheet_background"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:id="@+id/adminProductNameTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:textColor="@color/text_primary_dark"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        tools:text="Product Name" />
+
+    <!-- NEW: TextView to display the barcode -->
+    <TextView
+        android:id="@+id/adminBarcodeTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:textColor="@color/text_secondary_light"
+        android:textSize="14sp"
+        tools:text="Barcode: 89009192" />
+
+    <TextView
+        android:id="@+id/adminProductPriceTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/text_secondary_light"
+        android:textSize="18sp"
+        tools:text="Price: $9.99" />
+
+</LinearLayout>

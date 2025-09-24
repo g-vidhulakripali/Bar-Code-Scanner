@@ -3,6 +3,7 @@ package com.projects.barcodescanner;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -225,6 +226,18 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
     }
 
     private void checkProductInDatabase(String barcode) {
+        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        String userRole = prefs.getString("userRole", "user");
+        Log.d("UserRole", "UserRole: " + userRole);
+        if ("admin".equalsIgnoreCase(userRole)) {
+            handleAdminScan(barcode);
+        } else {
+            // Otherwise, use the original flow for regular users.
+            handleUserScan(barcode);
+        }
+    }
+
+    private void handleUserScan(String barcode) {
         SupabaseService.getProductByBarcode(barcode, new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
@@ -273,6 +286,48 @@ public class CameraScannerActivity extends AppCompatActivity implements ProductN
         });
     }
 
+    private void handleAdminScan(String barcode) {
+        SupabaseService.getProductByBarcode(barcode, new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.e("Supabase", "Admin fetch failed", e);
+                // Even on failure, show the admin popup with "not found" info
+                runOnUiThread(() -> showAdminProductPopup("Product Not Found", 0.0, barcode));
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        JsonArray jsonArray = JsonParser.parseString(response.body().string()).getAsJsonArray();
+                        if (jsonArray.size() > 0) {
+                            // Product exists, show its details
+                            JsonObject productObject = jsonArray.get(0).getAsJsonObject();
+                            String name = productObject.has("product_name") ? productObject.get("product_name").getAsString() : "No Name";
+                            double price = productObject.has("price") ? productObject.get("price").getAsDouble() : 0.0;
+                            runOnUiThread(() -> showAdminProductPopup(name, price, barcode));
+                        } else {
+                            // Product does NOT exist, show "not found" details
+                            runOnUiThread(() -> showAdminProductPopup("Product Not Found", 0.0, barcode));
+                        }
+                    } catch (Exception e) {
+                        Log.e("Supabase", "Admin JSON parse error", e);
+                        runOnUiThread(() -> showAdminProductPopup("Data Error", 0.0, barcode));
+                    }
+                } else {
+                    // Unsuccessful response, still show "not found"
+                    runOnUiThread(() -> showAdminProductPopup("Product Not Found", 0.0, barcode));
+                }
+            }
+        });
+
+    }
+
+    private void showAdminProductPopup(String name, double price, String barcode) {
+        AdminProductBottomSheet bottomSheet = AdminProductBottomSheet.newInstance(name, price, barcode);// Assuming you want to rescan
+        bottomSheet.setCancelable(true);
+        bottomSheet.show(getSupportFragmentManager(), "AdminProductBottomSheetTag");
+    }
     private void showProductNotFoundPopup(String barcode) {
         ProductNotFoundBottomSheet bottomSheet = ProductNotFoundBottomSheet.newInstance(barcode);
         bottomSheet.setOnScanCompletionListener(this);

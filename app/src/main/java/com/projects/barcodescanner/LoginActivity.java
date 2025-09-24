@@ -76,7 +76,7 @@ public class LoginActivity extends AppCompatActivity {
                         editor.putString("userId", userId); // <-- SAVE THE USER ID
                         editor.putString("username", username); // Still useful as a cache
                         editor.putString("role", role);
-                        editor.putString("token", accessToken);
+                        editor.putString("accessToken", accessToken);
                         editor.apply();
 
                         runOnUiThread(() -> navigateToMain());

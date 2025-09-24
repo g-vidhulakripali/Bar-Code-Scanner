@@ -337,22 +337,63 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void fetchAndSetUsername() {
+        // Display cached username immediately for better UX
         String cachedUsername = sharedPreferences.getString("username", "User");
         welcomeTextView.setText("Hello, " + cachedUsername);
+
+        // --- CHANGE: Read both userId and accessToken from SharedPreferences ---
         String userId = sharedPreferences.getString("userId", null);
-        if (userId == null) { return; }
-        SupabaseAuth.getUserProfile(userId, new Callback() {
-            @Override public void onFailure(@NonNull Call call, @NonNull IOException e) {Log.e(TAG, "Username fetch failed", e);}
-            @Override public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                if (response.isSuccessful() && response.body() != null) {
+        String accessToken = sharedPreferences.getString("accessToken", null);
+
+        // If either is missing, we cannot proceed to fetch the role.
+        if (userId == null || accessToken == null) {
+            Log.e(TAG, "User ID or Access Token is missing. Cannot fetch user role.");
+            Toast.makeText(this, "Session error. Please log in again.", Toast.LENGTH_SHORT).show();
+            // The scan button will remain disabled, which is correct.
+            return;
+        }
+
+        // --- CHANGE: Pass both values to the updated SupabaseAuth method ---
+        SupabaseAuth.getUserProfile(userId, accessToken, new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.e(TAG, "Profile fetch failed", e);
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Could not verify user role.", Toast.LENGTH_SHORT).show());
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                if (response.isSuccessful()) {
                     try {
-                        JSONArray jsonArray = new JSONArray(response.body().string());
+                        String rawResponse = response.body().string();
+                        // This log is crucial for debugging. It should now contain your user data.
+                        Log.d(TAG, "UserProfileRaw Response: " + rawResponse);
+
+                        JSONArray jsonArray = new JSONArray(rawResponse);
                         if (jsonArray.length() > 0) {
-                            String realUsername = jsonArray.getJSONObject(0).getString("username");
-                            runOnUiThread(() -> welcomeTextView.setText("Hello, " + realUsername));
-                            sharedPreferences.edit().putString("username", realUsername).apply();
+                            JSONObject userProfile = jsonArray.getJSONObject(0);
+                            String realUsername = userProfile.getString("username");
+                            String userRole = userProfile.getString("role");
+
+                            // Save the confirmed role from the database
+                            sharedPreferences.edit()
+                                    .putString("userRole", userRole)
+                                    .apply();
+
+                            Log.d(TAG, "Successfully fetched and saved user role: " + userRole);
+
+                            // --- CHANGE: Enable the scan button only after success ---
+                            runOnUiThread(() -> {
+                                welcomeTextView.setText("Hello, " + realUsername);
+                            });
+                        } else {
+                            Log.w(TAG, "Profile fetch returned empty. CHECK ROW LEVEL SECURITY on your 'users' table in Supabase.");
                         }
-                    } catch (Exception e) { Log.e(TAG, "Username parse error", e); }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error parsing profile response", e);
+                    }
+                } else {
+                    Log.e(TAG, "Profile fetch failed with code: " + response.code() + " Body: " + response.body().string());
                 }
             }
         });
