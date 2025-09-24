@@ -75,6 +75,7 @@
             android:inputType="textEmailAddress"
             android:paddingStart="20dp"
             android:paddingEnd="20dp"
+            android:textColor="@android:color/black"
             android:textColorHint="#9E9E9E" />
 
         <EditText
@@ -89,6 +90,7 @@
             android:inputType="textPassword"
             android:paddingStart="20dp"
             android:paddingEnd="20dp"
+            android:textColor="@android:color/black"
             android:textColorHint="#9E9E9E" />
 
         <androidx.appcompat.widget.AppCompatButton
