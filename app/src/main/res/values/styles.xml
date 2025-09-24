@@ -19,4 +19,11 @@
     <style name="FormEditText.NoMargin">
         <item name="android:layout_marginBottom">0dp</item>
     </style>
+
+    <style name="YellowExposedDropdownMenu" parent="Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+        <item name="boxStrokeColor">@color/button_yellow</item>
+        <item name="hintTextColor">@color/button_yellow</item>
+        <item name="endIconTint">@color/button_yellow</item>
+        <item name="android:textColorHint">@color/app_dark_grey</item>
+    </style>
 </resources>

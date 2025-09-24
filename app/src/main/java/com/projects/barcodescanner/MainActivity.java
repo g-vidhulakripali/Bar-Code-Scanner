@@ -8,6 +8,8 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -29,7 +31,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 import com.google.android.gms.tasks.CancellationTokenSource;
 import com.google.android.material.tabs.TabLayout;
-import com.google.android.material.tabs.TabLayoutMediator;
+import com.projects.barcodescanner.adapter.DepthPageTransformer;
 import com.projects.barcodescanner.adapter.ProductAdapter;
 import com.projects.barcodescanner.db.SupabaseAuth;
 import com.projects.barcodescanner.db.SupabaseService;
@@ -70,6 +72,11 @@ public class MainActivity extends AppCompatActivity {
     private FusedLocationProviderClient fusedLocationClient;
     private ActivityResultLauncher<String> requestPermissionLauncher;
 
+    // Auto-Scroll Logic
+    private Handler autoScrollHandler;
+    private Runnable autoScrollRunnable;
+    private static final long AUTO_SCROLL_DELAY = 4000;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,19 +86,36 @@ public class MainActivity extends AppCompatActivity {
         setupListeners();
         setupViewPager();
 
+        // Initialize auto-scroll handler and the runnable
+        autoScrollHandler = new Handler(Looper.getMainLooper());
+        autoScrollRunnable = () -> {
+            if (productAdapter.getRealCount() > 0) {
+                productsViewPager.setCurrentItem(productsViewPager.getCurrentItem() + 1, true);
+            }
+        };
+
         sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         fetchAndSetUsername();
         initializePermissionLauncher();
 
-        // --- MODIFIED LOGIC ---
-        // 1. Populate the dropdown with all countries immediately from a local source.
         List<String> allCountries = getAllCountries();
         setupLocationSpinner(allCountries);
 
-        // 2. Then, proceed with trying to auto-detect the user's location.
         checkLocationPermissionAndFetchData();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopAutoScroll();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        startAutoScroll();
     }
 
     private void initializeViews() {
@@ -115,7 +139,36 @@ public class MainActivity extends AppCompatActivity {
     private void setupViewPager() {
         productAdapter = new ProductAdapter();
         productsViewPager.setAdapter(productAdapter);
-        new TabLayoutMediator(pageIndicator, productsViewPager, (tab, position) -> {}).attach();
+
+        // Configure ViewPager for animations and showing adjacent cards
+        productsViewPager.setClipToPadding(false);
+        productsViewPager.setClipChildren(false);
+        productsViewPager.setOffscreenPageLimit(3);
+        productsViewPager.setPageTransformer(new DepthPageTransformer());
+
+        // Setup page change listener to manage indicator and auto-scroll
+        productsViewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+                if (productAdapter.getRealCount() > 0) {
+                    int realPosition = position % productAdapter.getRealCount();
+                    if (pageIndicator.getSelectedTabPosition() != realPosition) {
+                        pageIndicator.selectTab(pageIndicator.getTabAt(realPosition));
+                    }
+                }
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                super.onPageScrollStateChanged(state);
+                if (state == ViewPager2.SCROLL_STATE_DRAGGING) {
+                    stopAutoScroll();
+                } else if (state == ViewPager2.SCROLL_STATE_IDLE) {
+                    startAutoScroll();
+                }
+            }
+        });
     }
 
     private void initializePermissionLauncher() {
@@ -142,11 +195,6 @@ public class MainActivity extends AppCompatActivity {
         emptyStateTextView.setVisibility(hasProducts ? View.GONE : View.VISIBLE);
     }
 
-    /**
-     * NEW METHOD: Generates a sorted list of all country names using Android's Locale services.
-     * This is efficient and does not require a network call.
-     * @return A sorted List of country names.
-     */
     private List<String> getAllCountries() {
         List<String> countries = new ArrayList<>();
         String[] isoCountryCodes = Locale.getISOCountries();
@@ -166,6 +214,9 @@ public class MainActivity extends AppCompatActivity {
         locationAutoCompleteTextView.setAdapter(adapter);
         locationAutoCompleteTextView.setOnItemClickListener((parent, view, position, id) -> {
             String selectedLocation = (String) parent.getItemAtPosition(position);
+            // FIX: Stop scroll and clear view immediately to prevent glitches
+            stopAutoScroll();
+            updateProductViewVisibility(false); // Hide old cards
             fetchProductsFromSupabase(selectedLocation);
         });
     }
@@ -175,7 +226,7 @@ public class MainActivity extends AppCompatActivity {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             getCurrentLocationAndFetchProducts();
         } else {
-            showLoading(false); // Hide loader while permission dialog is shown
+            showLoading(false);
             requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
         }
     }
@@ -190,7 +241,7 @@ public class MainActivity extends AppCompatActivity {
                             locationAutoCompleteTextView.setText(country, false);
                             fetchProductsFromSupabase(country);
                         } else {
-                            Toast.makeText(this, "Could not auto-detect location. Please select one.", Toast.LENGTH_LONG).show();
+                            Toast.makeText(this, "Could not auto-detect location.", Toast.LENGTH_LONG).show();
                             showLoading(false);
                             updateProductViewVisibility(false);
                         }
@@ -250,12 +301,40 @@ public class MainActivity extends AppCompatActivity {
                     showLoading(false);
                     productAdapter.setProducts(productList);
                     updateProductViewVisibility(!productList.isEmpty());
+
+                    if (!productList.isEmpty()) {
+                        // Setup indicator tabs
+                        pageIndicator.removeAllTabs();
+                        for (int i = 0; i < productAdapter.getRealCount(); i++) {
+                            pageIndicator.addTab(pageIndicator.newTab());
+                        }
+
+                        // Set initial position for infinite loop
+                        int itemCount = 1000; // Must match adapter
+                        int initialPosition = (itemCount / 2) - ((itemCount / 2) % productList.size());
+                        productsViewPager.setCurrentItem(initialPosition, false);
+
+                        // Start auto-scroll AFTER everything is ready
+                        startAutoScroll();
+                    } else {
+                        // Ensure tabs are cleared if no products are found
+                        pageIndicator.removeAllTabs();
+                    }
                 });
             }
         });
     }
 
-    // --- Unchanged Helper & User Action Methods ---
+    private void startAutoScroll() {
+        stopAutoScroll(); // Prevent multiple runnables
+        if (productAdapter.getRealCount() > 0) {
+            autoScrollHandler.postDelayed(autoScrollRunnable, AUTO_SCROLL_DELAY);
+        }
+    }
+
+    private void stopAutoScroll() {
+        autoScrollHandler.removeCallbacks(autoScrollRunnable);
+    }
 
     private void fetchAndSetUsername() {
         String cachedUsername = sharedPreferences.getString("username", "User");

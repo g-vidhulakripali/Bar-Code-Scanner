@@ -36,18 +36,25 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
 
     @Override
     public void onBindViewHolder(@NonNull ProductViewHolder holder, int position) {
-        Product product = productList.get(position);
+        if (productList.isEmpty()) {
+            return;
+        }
+        Product product = productList.get(position % productList.size());
         holder.bind(product);
     }
 
     @Override
     public int getItemCount() {
-        return productList.size();
+        return productList.isEmpty() ? 0 : 1000;
     }
 
     public void setProducts(List<Product> products) {
         this.productList = products;
         notifyDataSetChanged();
+    }
+
+    public int getRealCount() {
+        return productList.size();
     }
 
     static class ProductViewHolder extends RecyclerView.ViewHolder {
@@ -74,7 +81,8 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
             Context context = itemView.getContext();
 
             // Bind product name and barcode number
-            productNameTextView.setText(product.getProductName().replace(" ", "\n"));
+//            productNameTextView.setText(product.getProductName().replace(" ", "\n"));
+            productNameTextView.setText(product.getProductName());
             barcodeNumberTextView.setText(product.getBarcode());
 
             // Load product image using Picasso

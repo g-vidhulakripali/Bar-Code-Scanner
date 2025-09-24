@@ -40,29 +40,28 @@
     <!-- Location Dropdown (Unchanged) -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/locationSelectorLayout"
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-        android:layout_width="0dp"
+
+    style="@style/YellowExposedDropdownMenu"
+
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="64dp"
+    android:layout_marginTop="32dp"
+    android:hint="Location"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toBottomOf="@id/welcomeTextView">
+
+    <AutoCompleteTextView
+        android:id="@+id/locationAutoCompleteTextView"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="64dp"
-        android:layout_marginTop="32dp"
-        android:hint="Location"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/welcomeTextView">
-        <AutoCompleteTextView
-            android:id="@+id/locationAutoCompleteTextView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="none"
-            android:text="Detecting..."
-            tools:ignore="LabelFor" />
-    </com.google.android.material.textfield.TextInputLayout>
+        android:inputType="none"
+        android:text="Detecting..."
+        tools:ignore="LabelFor" />
 
+</com.google.android.material.textfield.TextInputLayout>
 
-    <!-- ================================================================ -->
-    <!-- NEW & IMPROVED: Main Content Area using a FrameLayout            -->
-    <!-- This ensures the cards and the empty text occupy the same space. -->
-    <!-- ================================================================ -->
     <FrameLayout
         android:id="@+id/contentFrame"
         android:layout_width="0dp"
