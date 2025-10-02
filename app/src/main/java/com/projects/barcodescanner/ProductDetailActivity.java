@@ -42,9 +42,11 @@ public class ProductDetailActivity extends AppCompatActivity {
     private ImageView productImageView;
     private TextView productNameTextView, brandTextView, priceTextView, countryFlagTextView,
             barcodeTextView, categoryTextView, edibleStatusTextView, descriptionTextView,
-            ingredientsTextView, availabilityTextView, specificationsTextView, bestSuitedTextView;
+            ingredientsTextView, availabilityTextView, specificationsTextView, bestSuitedTextView,
+            healthBenefitsTextView; // <-- ADDED
     private ProgressBar progressBar;
-    private LinearLayout descriptionSection, ingredientsSection, availabilitySection, specificationsSection;
+    private LinearLayout descriptionSection, ingredientsSection, availabilitySection, specificationsSection,
+            healthBenefitsSection; // <-- ADDED
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,12 +78,14 @@ public class ProductDetailActivity extends AppCompatActivity {
         availabilityTextView = findViewById(R.id.availabilityTextView);
         specificationsTextView = findViewById(R.id.specificationsTextView);
         bestSuitedTextView = findViewById(R.id.bestSuitedTextView);
+        healthBenefitsTextView = findViewById(R.id.healthBenefitsTextView); // <-- ADDED
 
         // Section Layouts
         descriptionSection = findViewById(R.id.descriptionSection);
         ingredientsSection = findViewById(R.id.ingredientsSection);
         availabilitySection = findViewById(R.id.availabilitySection);
         specificationsSection = findViewById(R.id.specificationsSection);
+        healthBenefitsSection = findViewById(R.id.healthBenefitsSection); // <-- ADDED
 
         progressBar = findViewById(R.id.progressBar);
     }
@@ -202,6 +206,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         // --- Populate Collapsible Sections ---
         populateSection(descriptionSection, descriptionTextView, product.getDescription());
         populateSection(ingredientsSection, ingredientsTextView, formatList(product.getIngredients()));
+        populateSection(healthBenefitsSection, healthBenefitsTextView, formatList(product.getHealthBenefits())); // <-- ADDED
         populateSection(availabilitySection, availabilityTextView, formatList(product.getAvailableStores()));
         populateSection(specificationsSection, specificationsTextView, formatList(product.getSpecifications()));
     }

@@ -229,6 +229,39 @@
                 tools:text="UNBLEACHED ENRICHED FLOUR, SUGAR, PALM AND/OR CANOLA OIL, COCOA, HIGH FRUCTOSE CORN SYRUP" />
         </LinearLayout>
 
+        <!-- Health Benefits Section -->
+        <LinearLayout
+            android:id="@+id/healthBenefitsSection"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/ingredientsSection"
+            tools:visibility="visible">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-black"
+                android:text="Health Benefits"
+                android:textColor="#B3684410"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/healthBenefitsTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="#FFFFFF"
+                android:justificationMode="inter_word"
+                android:textSize="15sp"
+                tools:text="• Good source of Iron\n• Provides quick energy" />
+        </LinearLayout>
+
         <!-- Availability Section -->
         <LinearLayout
             android:id="@+id/availabilitySection"
@@ -239,7 +272,7 @@
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/ingredientsSection"
+            app:layout_constraintTop_toBottomOf="@id/healthBenefitsSection"
             tools:visibility="visible">
 
             <TextView

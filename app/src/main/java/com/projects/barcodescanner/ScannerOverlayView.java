@@ -33,14 +33,12 @@ public class ScannerOverlayView extends View {
         maskPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         maskPaint.setColor(Color.parseColor("#99000000")); // Black with ~60% opacity
 
-        // --- FIXED ---
         // Paint for the viewfinder box border. Using plain white is clean and high-contrast.
         boxPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         boxPaint.setColor(Color.WHITE); // Use a reliable color like white
         boxPaint.setStyle(Paint.Style.STROKE);
         boxPaint.setStrokeWidth(8f);
 
-        // --- FIXED ---
         // Paint for the scanning "laser". Using a standard Android color is safe.
         laserPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         laserPaint.setColor(ContextCompat.getColor(context, android.R.color.holo_red_light)); // A bright, standard red
